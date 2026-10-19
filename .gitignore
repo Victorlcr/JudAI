@@ -1,0 +1,26 @@
+# Ambientes virtuais
+venv/
+.venv/
+env/
+
+# Bytecode e cache do Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Variáveis de ambiente sensíveis e segredos
+.env
+
+# Diretório de dados (ignora todos os arquivos gerados, preservando subpastas e .gitkeep)
+data/*
+!data/**/
+!data/**/.gitkeep
+data/**/*
+!data/**/
+!data/**/.gitkeep
+
+# Logs e arquivos de sistema operacional
+*.log
+.DS_Store
+Thumbs.db
