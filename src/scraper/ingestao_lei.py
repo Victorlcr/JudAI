@@ -84,10 +84,10 @@ NUM = r"\d{1,3}(?:\.\d{3})+|\d+"                  # 5, 10, 1.368, 2046
 ORD = r"(?:\s*[º°ª\ufffd]+|\s+o(?=\s|$))?"        # º, °, "o" sobrescrito
 SUF = r"(?:\s*-\s*([A-Z])\b)?"                    # sufixo -A, -B ...
 
-RE_ART = re.compile(rf"^Art\.?\s*({NUM}){ORD}{SUF}\s*[.\-–—]*\s*(.*)$", re.S)
-RE_PAR = re.compile(rf"^(?:§|\ufffd)\s*({NUM}){ORD}{SUF}\s*[.\-–—]*\s*(.*)$", re.S)
-RE_PUN = re.compile(r"^Par.grafo\s+.nico\s*[.\-–—]*\s*(.*)$", re.S | re.I)
-RE_INC = re.compile(r"^([IVXLCDM]+(?:-[A-Z])?)\s*[-–—\ufffd]\s*(.*)$", re.S)
+RE_ART = re.compile(rf"^Art\.?\s*({NUM}){ORD}{SUF}\s*[.\-–—\x96\x97]*\s*(.*)$", re.S)
+RE_PAR = re.compile(rf"^(?:§|\ufffd)\s*({NUM}){ORD}{SUF}\s*[.\-–—\x96\x97]*\s*(.*)$", re.S)
+RE_PUN = re.compile(r"^Par.grafo\s+.nico\s*[.\-–—\x96\x97]*\s*(.*)$", re.S | re.I)
+RE_INC = re.compile(r"^([IVXLCDM]+(?:-[A-Z])?)\s*[-–—\x96\x97\ufffd]\s*(.*)$", re.S)
 RE_ALI = re.compile(r"^([a-z])\)\s*(.*)$", re.S)
 RE_HEAD = re.compile(
     r"^(?i:(LIVRO|SUBT.TULO|T.TULO|CAP.TULO|SUBSE..O|SE..O))\s+"
@@ -206,10 +206,10 @@ def novo_no(tipo, numero, texto, p, **extra):
 
 
 def parsear(html: str):
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
     ps = soup.find_all("p")
-    if len(ps) < 50 and len(html) > 10000:
-        soup = BeautifulSoup(html, "html.parser")
+    if not ps:
+        soup = BeautifulSoup(html, "lxml")
         ps = soup.find_all("p")
     linhas = [(p, limpar(p.get_text())) for p in ps]
     linhas = [(p, t) for p, t in linhas if t]

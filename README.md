@@ -116,16 +116,22 @@ docker compose ps
 
 ---
 
-## 4. Ingestão de Leis do Planalto (Scraper)
+## 4. Ingestão de Leis do Planalto (Crawler e Scraper)
 
-Com o MongoDB em execução, você pode baixar e estruturar automaticamente o Código Civil (ou outra lei compilada do Portal da Legislação do Planalto) nas coleções `leis`, `artigos` e `dispositivos`:
+Com o MongoDB em execução, o módulo `src.scraper.carregar_mongo` funciona como um **crawler automático** que varre as páginas de índice do Portal da Legislação do Planalto (Constituição, Códigos, Estatutos, Leis Complementares, Leis Delegadas e Leis Ordinárias por ano), segue automaticamente os links de *"Texto compilado"* e estrutura cada diploma nas coleções `leis`, `artigos` e `dispositivos`:
 
 ```bash
-# Ingestão padrão (baixa o Código Civil direto do Planalto e salva no MongoDB)
+# Varre e baixa TODAS as leis dos quadros do Planalto (Constituição, Códigos, Estatutos, Complementares e Ordinárias)
 python -m src.scraper.carregar_mongo
 
-# Ou utilizando o CLI completo com URL/arquivo específico:
-python -m src.scraper.ingestao_lei https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm --lei-id cc2002 --lei-nome "Código Civil"
+# Baixar apenas Constituição, Códigos e Estatutos principais (~38 diplomas fundamentais)
+python -m src.scraper.carregar_mongo --escopo codigos
+
+# Filtrar anos das Leis Ordinárias, limitar quantidade e pular leis já gravadas no banco
+python -m src.scraper.carregar_mongo --anos 2020-2026 --limite 100 --pular-existentes
+
+# Ou baixar uma única lei específica (URL do Planalto ou arquivo .html local)
+python -m src.scraper.carregar_mongo https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm
 ```
 
 ---
