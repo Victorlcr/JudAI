@@ -1,80 +1,90 @@
 """
-Módulo de Busca Léxica Esparsa (BM25) - JudAI
-==============================================
-Este módulo é um PLACEHOLDER estrutural para o motor de busca léxica esparsa
-baseado no algoritmo BM25 (Okapi / BM25Plus via biblioteca rank_bm25).
+Módulo de Busca Léxica / Clássica (BM25 / TFIDF-MLP Wrapper) - JudAI
+====================================================================
+Atua como DELEGADOR e WRAPPER retrocompatível para o motor de busca clássica.
+Conforme arquitetura estabelecida em ORIGINAL_REQUEST e PROJECT.md, redireciona
+as requisições de busca clássica para o classificador neural TF-IDF + MLP (TfidfMLPSearch).
 
-Papel no RAG Híbrido Jurídico:
-------------------------------
-A recuperação de legislação brasileira apresenta termos técnicos específicos,
-expressões em latim (ex.: pacta sunt servanda, erga omnes, usucapião, evicção)
-e citações numéricas de artigos da lei (ex.: art. 186, art. 927).
-Em marcos futuros, este componente será responsável por:
-1. Tokenização e normalização de consultas do usuário e dispositivos legais.
-2. Remoção de stopwords jurídicas preservando partículas estruturais e números de artigos.
-3. Indexação esparsa de dispositivos extraídos da base MongoDB (artigos, parágrafos, incisos).
-4. Ranqueamento com pontuação BM25 para recuperação dos top-K candidatos léxicos exatos.
-5. Integração na etapa de fusão de rankings (Reciprocal Rank Fusion - RRF)
-   com a busca semântica densa (BERT).
-
-ATENÇÃO DE ARQUITETURA:
------------------------
-Nenhuma lógica ativa de Machine Learning ou indexação esparsa está implementada
-nesta fase de infraestrutura base (placeholder estrutural / not implemented).
-Não carrega dependências pesadas em nível de módulo para assegurar inicialização instantânea.
+Retrocompatibilidade:
+- Preserva a assinatura BM25Search(corpus=...) e search(query, top_k=...).
+- Suporta retorno tanto no formato padrão da API ({model, query, results, execution_time_ms})
+  quanto formato em lista pura de dicionários para eventuais chamadas legadas.
 """
 from __future__ import annotations
 
-from typing import Any
+from pathlib import Path
+from typing import Any, Optional, Union
+
+from src.models.tfidf_mlp_search import TfidfMLPSearch, ModeloClassicoTFIDF
 
 
 class BM25Search:
     """
-    Placeholder estrutural para o motor de busca léxica BM25 no pipeline do JudAI.
-
-    Esta classe define a interface pública para tokenização, indexação de corpus
-    legislativo e busca por relevância textual. Na presente fase de infraestrutura base,
-    todos os métodos de processamento lançam NotImplementedError (placeholder estrutural,
-    não implementado) para evitar dependências pesadas e inicializações desnecessárias.
+    Wrapper e Delegador para busca clássica retrocompatível com a interface BM25.
+    Delega a execução para TfidfMLPSearch garantindo reutilização de código e artefatos.
     """
 
-    def __init__(self, corpus: list[dict[str, Any]] | None = None) -> None:
-        """
-        Inicializa o placeholder do motor de busca BM25.
-
-        Args:
-            corpus: Lista opcional de dicionários representando dispositivos legais
-                    a serem futuramente indexados.
-        """
+    def __init__(
+        self,
+        corpus: Optional[list[dict[str, Any]]] = None,
+        model_dir: Optional[Path | str] = None,
+        auto_load: bool = True
+    ) -> None:
         self.corpus: list[dict[str, Any]] = corpus or []
+        self._delegate: TfidfMLPSearch = TfidfMLPSearch(model_dir=model_dir, auto_load=auto_load)
 
-    def fit(self, corpus: list[dict[str, Any]]) -> None:
+    @property
+    def is_loaded(self) -> bool:
+        return self._delegate.is_loaded
+
+    @property
+    def model(self) -> Optional[ModeloClassicoTFIDF]:
+        return self._delegate.model
+
+    def fit(
+        self,
+        corpus: Optional[list[dict[str, Any]]] = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
         """
-        Planejado: Processa e indexa o corpus de legislação.
+        Ajusta o modelo de busca clássica delegando para TfidfMLPSearch.fit().
+        """
+        if corpus is not None:
+            self.corpus = corpus
+        return self._delegate.fit(**kwargs)
 
-        Em versões futuras, executará a tokenização e o cálculo de frequências de termos
-        (TF-IDF/BM25) sobre os artigos legislativos.
+    def load(self, save_dir: Optional[Path | str] = None) -> bool:
+        """Carrega os artefatos treinados delegando para TfidfMLPSearch.load()."""
+        return self._delegate.load(save_dir)
+
+    def search(
+        self,
+        query: str,
+        top_k: int = 3,
+        return_dict: bool = True
+    ) -> Union[dict[str, Any], list[dict[str, Any]]]:
+        """
+        Executa a busca clássica delegada.
 
         Args:
-            corpus: Lista de dicionários representando documentos ou dispositivos.
-
-        Raises:
-            NotImplementedError: Funcionalidade não implementada (placeholder na infraestrutura base).
+            query: Termo, citação ou consulta jurídica em linguagem natural.
+            top_k: Quantidade máxima de resultados (default: 3).
+            return_dict: Se True, retorna o dicionário completo do contrato da API com model='bm25';
+                         se False, retorna apenas a lista de resultados compatível com a interface legada.
         """
-        raise NotImplementedError("BM25 indexing is not yet implemented.")
+        response = self._delegate.search(query=query, top_k=top_k)
 
-    def search(self, query: str, top_k: int = 10) -> list[dict[str, Any]]:
-        """
-        Planejado: Executa busca léxica com pontuação BM25 sobre o corpus indexado.
+        if return_dict:
+            # Retorna o dicionário compatível com o endpoint POST /search/bm25
+            return {
+                "model": "bm25",
+                "query": query,
+                "results": response["results"],
+                "execution_time_ms": response["execution_time_ms"]
+            }
 
-        Args:
-            query: Termo, número de artigo ou expressão jurídica a pesquisar.
-            top_k: Quantidade máxima de resultados relevantes a retornar (default: 10).
+        return response["results"]
 
-        Returns:
-            Lista de dicionários com os dispositivos ordenados por pontuação BM25.
 
-        Raises:
-            NotImplementedError: Funcionalidade não implementada (placeholder na infraestrutura base).
-        """
-        raise NotImplementedError("BM25 search is not yet implemented.")
+# Exporta TfidfMLPSearch no mesmo namespace para conveniência
+__all__ = ["BM25Search", "TfidfMLPSearch", "ModeloClassicoTFIDF"]

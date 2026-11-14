@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JudAI - Plataforma de RAG Jurídico Inteligente para o Código Civil Brasileiro">
+  <meta name="theme-color" content="#0f172a">
+  <title>JudAI — Plataforma de RAG Jurídico Inteligente</title>
+  <style>
+    /* ==========================================================================
+       JudAI Legal Tech Design System - Modern, Crisp, High-Contrast Palette
+       ========================================================================== */
+    :root {
+      --navy-950: #0a0f1d;
+      --navy-900: #0f172a;
+      --navy-800: #1e293b;
+      --navy-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50:  #f8fafc;
+      --white:     #ffffff;
+
+      /* Model Accent Colors */
+      --blue-primary: #2563eb;
+      --blue-hover:   #1d4ed8;
+      --blue-subtle:  #eff6ff;
+      --blue-border:  #bfdbfe;
+
+      --violet-primary: #7c3aed;
+      --violet-hover:   #6d28d9;
+      --violet-subtle:  #f5f3ff;
+      --violet-border:  #ddd6fe;
+
+      --emerald-primary: #059669;
+      --emerald-subtle:  #ecfdf5;
+      --emerald-border:  #a7f3d0;
+
+      --amber-primary: #d97706;
+      --amber-subtle:  #fffbeb;
+      --amber-border:  #fde68a;
+
+      --red-primary: #dc2626;
+      --red-subtle:  #fef2f2;
+      --red-border:  #fecaca;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--slate-50);
+      color: var(--navy-900);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Brand Header */
+    header.judai-header {
+      background: linear-gradient(135deg, var(--navy-950) 0%, var(--navy-900) 100%);
+      color: var(--white);
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--navy-800);
+      box-shadow: var(--shadow-md);
+    }
+
+    .header-content {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--blue-primary), var(--violet-primary));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
+    }
+
+    .brand-logo-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: none;
+      stroke: var(--white);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-title-wrap h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-title-wrap .version-badge {
+      font-size: 0.72rem;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 0.15rem 0.55rem;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title-wrap p {
+      font-size: 0.82rem;
+      color: var(--slate-400);
+      font-weight: 400;
+    }
+
+    .system-status {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--navy-700);
+      padding: 0.4rem 0.85rem;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--emerald-primary);
+      box-shadow: 0 0 8px var(--emerald-primary);
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.15); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Main Container */
+    main.main-content {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem 3rem 1.5rem;
+      flex: 1;
+    }
+
+    /* Navigation Tabs */
+    .tabs-nav {
+      display: flex;
+      background: var(--white);
+      padding: 0.35rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.5rem;
+      gap: 0.35rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border: none;
+      background: transparent;
+      color: var(--slate-600);
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      background: var(--slate-100);
+      color: var(--navy-900);
+    }
+
+    .tab-btn.active {
+      background: var(--navy-900);
+      color: var(--white);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-btn.active.modern-active {
+      background: linear-gradient(135deg, var(--blue-primary), #1e40af);
+      color: var(--white);
+    }
+
+    .tab-btn.active.classic-active {
+      background: linear-gradient(135deg, var(--violet-primary), #5b21b6);
+      color: var(--white);
+    }
+
+    .tab-btn.active.compare-active {
+      background: linear-gradient(135deg, var(--navy-900), #1e1b4b);
+      color: var(--white);
+    }
+
+    /* Search & Query Bar */
+    .search-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.75rem;
+    }
+
+    .search-form {
+      display: flex;
+      gap: 0.75rem;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .search-icon-inside {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--slate-400);
+      pointer-events: none;
+      width: 20px;
+      height: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.85rem 2.8rem 0.85rem 2.85rem;
+      border: 1.5px solid var(--slate-300);
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      color: var(--navy-900);
+      background-color: var(--white);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--blue-primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--slate-400);
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+      padding: 0.25rem 0.5rem;
+      display: none;
+      border-radius: var(--radius-sm);
+    }
+
+    .clear-btn:hover {
+      color: var(--navy-900);
+      background: var(--slate-100);
+    }
+
+    .top-k-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--slate-50);
+      border: 1.5px solid var(--slate-300);
+      border-radius: var(--radius-md);
+      padding: 0 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--slate-600);
+    }
+
+    .top-k-select {
+      background: transparent;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--navy-900);
+      cursor: pointer;
+      outline: none;
+      padding: 0.85rem 0.25rem;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, var(--blue-primary), var(--blue-hover));
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .submit-btn:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Example Chips (Pills) */
+    .chips-section {
+      margin-top: 1.1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .chips-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 0.35rem;
+    }
+
+    .chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .chip-pill {
+      background: var(--slate-100);
+      border: 1px solid var(--slate-200);
+      color: var(--navy-800);
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-full);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .chip-pill:hover {
+      background: var(--white);
+      border-color: var(--blue-primary);
+      color: var(--blue-primary);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .chip-pill.canonical-chip {
+      background: var(--blue-subtle);
+      border-color: var(--blue-border);
+      color: var(--blue-hover);
+      font-weight: 600;
+    }
+
+    .chip-pill.refusal-chip {
+      background: var(--amber-subtle);
+      border-color: var(--amber-border);
+      color: var(--amber-primary);
+    }
+
+    /* Tab Panes */
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Components */
+    .hero-response-card {
+      background: linear-gradient(180deg, #ffffff 0%, var(--blue-subtle) 100%);
+      border: 1.5px solid var(--blue-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+
+    .hero-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(191, 219, 254, 0.6);
+      padding-bottom: 0.75rem;
+    }
+
+    .hero-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--blue-hover);
+    }
+
+    .hero-answer-body {
+      font-size: 1.15rem;
+      line-height: 1.65;
+      color: var(--navy-950);
+      font-weight: 500;
+      white-space: pre-line;
+      margin-bottom: 1rem;
+    }
+
+    /* Refusal / Abstention Warning Card */
+    .refusal-card {
+      background: var(--amber-subtle);
+      border: 1.5px solid var(--amber-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .refusal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--amber-primary);
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .refusal-message {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #92400e;
+      margin-bottom: 0.75rem;
+    }
+
+    .refusal-explanation {
+      font-size: 0.88rem;
+      color: #78350f;
+      line-height: 1.5;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    /* Badges */
+    .badge-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-latency {
+      background: var(--slate-100);
+      color: var(--slate-600);
+      border: 1px solid var(--slate-300);
+    }
+
+    .badge-confidence-high {
+      background: var(--emerald-subtle);
+      color: var(--emerald-primary);
+      border: 1px solid var(--emerald-border);
+    }
+
+    .badge-confidence-med {
+      background: var(--blue-subtle);
+      color: var(--blue-primary);
+      border: 1px solid var(--blue-border);
+    }
+
+    .badge-confidence-low {
+      background: var(--amber-subtle);
+      color: var(--amber-primary);
+      border: 1px solid var(--amber-border);
+    }
+
+    .badge-model-info {
+      background: var(--slate-100);
+      color: var(--slate-600);
+      border: 1px solid var(--slate-200);
+    }
+
+    /* Article List Cards */
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--navy-900);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .article-cards-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .article-card {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .article-card:hover {
+      border-color: var(--slate-300);
+      box-shadow: var(--shadow-md);
+    }
+
+    .article-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .article-citation {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--navy-900);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .article-id-sub {
+      font-size: 0.78rem;
+      color: var(--slate-400);
+      font-family: monospace;
+      font-weight: normal;
+    }
+
+    /* Softmax Probability Bar (for Classic Model) */
+    .prob-bar-wrapper {
+      margin: 0.75rem 0 1rem 0;
+      background: var(--slate-100);
+      border-radius: var(--radius-full);
+      height: 20px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--slate-200);
+    }
+
+    .prob-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--violet-primary), #a855f7);
+      border-radius: var(--radius-full);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .prob-bar-text {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    /* Legal Text Accordion / Collapsible */
+    .legal-text-preview {
+      font-size: 0.92rem;
+      color: var(--slate-600);
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+    }
+
+    details.legal-text-details {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    details.legal-text-details summary {
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--blue-primary);
+      user-select: none;
+      outline: none;
+    }
+
+    details.legal-text-details summary:hover {
+      text-decoration: underline;
+    }
+
+    .legal-text-full {
+      font-size: 0.9rem;
+      color: var(--navy-800);
+      line-height: 1.65;
+      padding-top: 0.75rem;
+      white-space: pre-line;
+      border-top: 1px dashed var(--slate-300);
+      margin-top: 0.5rem;
+    }
+
+    /* Side-by-Side Comparison Layout */
+    .comparison-summary-card {
+      background: var(--white);
+      border: 1.5px solid var(--slate-300);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.75rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+    }
+
+    .summary-metrics {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: var(--slate-500);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--navy-900);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .compare-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .column-header {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--slate-200);
+      padding: 1rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .column-header.classic-head {
+      border-top: 4px solid var(--violet-primary);
+    }
+
+    .column-header.modern-head {
+      border-top: 4px solid var(--blue-primary);
+    }
+
+    .column-header-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--navy-900);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Skeleton Loading State */
+    .skeleton-container {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    .skeleton-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--slate-200);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skeleton-line {
+      height: 16px;
+      background: var(--slate-200);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.75rem;
+    }
+
+    .skeleton-line.short { width: 35%; height: 20px; }
+    .skeleton-line.medium { width: 65%; }
+    .skeleton-line.full { width: 100%; }
+
+    .skeleton-card::after {
+      content: "";
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      transform: translateX(-100%);
+      background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0,
+        rgba(255, 255, 255, 0.6) 20%,
+        rgba(255, 255, 255, 0.6) 60%,
+        rgba(255, 255, 255, 0)
+      );
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    .loading-notice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      color: var(--slate-600);
+      font-size: 0.92rem;
+      font-weight: 500;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid var(--slate-300);
+      border-top-color: var(--blue-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty State & Error Banner */
+    .empty-state {
+      text-align: center;
+      padding: 3.5rem 1.5rem;
+      color: var(--slate-500);
+    }
+
+    .empty-state-icon {
+      font-size: 2.8rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.8;
+    }
+
+    .error-banner {
+      background: var(--red-subtle);
+      border: 1.5px solid var(--red-border);
+      color: var(--red-primary);
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* Footer */
+    footer.judai-footer {
+      background: var(--white);
+      border-top: 1px solid var(--slate-200);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--slate-500);
+      margin-top: auto;
+    }
+
+    footer.judai-footer strong {
+      color: var(--navy-900);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       JudAI Header Bar
+       ======================================================================== -->
+  <header class="judai-header">
+    <div class="header-content">
+      <div class="brand-group">
+        <div class="brand-logo-icon">
+          <!-- Balança da Justiça / SVG Ícone -->
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3v18M3 9l9-4 9 4M6 9l-3 7h6l-3-7zm12 0l-3 7h6l-3-7zM8 21h8" />
+          </svg>
+        </div>
+        <div class="brand-title-wrap">
+          <h1>JudAI <span class="version-badge">RAG Jurídico</span></h1>
+          <p>Inteligência Artificial aplicada à Legislação Civil Brasileira (Lei 10.406/2002)</p>
+        </div>
+      </div>
+
+      <div class="system-status" id="system-status-pill">
+        <div class="status-dot"></div>
+        <span id="system-status-text">Conectando aos modelos...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Main Application Container
+       ======================================================================== -->
+  <main class="main-content">
+
+    <!-- Tab Navigation (3 Visões) -->
+    <nav class="tabs-nav" role="tablist">
+      <button class="tab-btn active compare-active" id="tab-btn-compare" role="tab" aria-selected="true" onclick="switchTab('compare')">
+        ⚖️ Comparação Lado a Lado
+      </button>
+      <button class="tab-btn" id="tab-btn-modern" role="tab" aria-selected="false" onclick="switchTab('modern')">
+        🧠 Modelo Moderno (BERTimbau + mT0)
+      </button>
+      <button class="tab-btn" id="tab-btn-classic" role="tab" aria-selected="false" onclick="switchTab('classic')">
+        ⚡ Modelo Clássico (TF-IDF + MLP)
+      </button>
+    </nav>
+
+    <!-- Query Input & Search Controls -->
+    <section class="search-card">
+      <form class="search-form" id="search-form" onsubmit="handleSearchSubmit(event)">
+        <div class="input-wrapper">
+          <svg class="search-icon-inside" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="text" 
+            id="query-input" 
+            class="search-input" 
+            placeholder="Digite sua dúvida jurídica em linguagem natural ou cite um artigo..." 
+            autocomplete="off" 
+            required 
+          />
+          <button type="button" class="clear-btn" id="clear-btn" onclick="clearSearchInput()" title="Limpar">×</button>
+        </div>
+
+        <div class="top-k-select-wrap">
+          <label for="top-k-select">Top-K:</label>
+          <select id="top-k-select" class="top-k-select">
+            <option value="3" selected>3 Artigos</option>
+            <option value="5">5 Artigos</option>
+            <option value="1">1 Artigo</option>
+          </select>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          <span>Consultar</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </form>
+
+      <!-- Predefined Prompt Chips (Pills) -->
+      <div class="chips-section">
+        <span class="chips-label">Exemplos Prontos:</span>
+        <div class="chips-list">
+          <button 
+            type="button" 
+            class="chip-pill canonical-chip" 
+            onclick="setQueryAndSearch('Com quantos anos a pessoa passa a ser plenamente capaz na vida civil?')">
+            🎯 Maioridade Civil (Art. 5º)
+          </button>
+          <button 
+            type="button" 
+            class="chip-pill" 
+            onclick="setQueryAndSearch('Quais são os deveres dos cônjuges no casamento?')">
+            💍 Deveres no Casamento
+          </button>
+          <button 
+            type="button" 
+            class="chip-pill" 
+            onclick="setQueryAndSearch('Quando começa a personalidade civil da pessoa natural?')">
+            👶 Personalidade Civil
+          </button>
+          <button 
+            type="button" 
+            class="chip-pill" 
+            onclick="setQueryAndSearch('Qual o prazo para reparação civil por dano moral?')">
+            ⏳ Prescrição Dano Moral
+          </button>
+          <button 
+            type="button" 
+            class="chip-pill refusal-chip" 
+            onclick="setQueryAndSearch('Receita de bolo de fubá com goiabada')">
+            🍰 Teste de Abstenção (Fora de Escopo)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Error Banner Area -->
+    <div id="error-container" style="display: none;"></div>
+
+    <!-- Skeleton Loader Area -->
+    <div class="skeleton-container" id="skeleton-loader">
+      <div class="loading-notice">
+        <div class="spinner"></div>
+        <span id="loading-message">Processando inferência nos modelos neurais...</span>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line full"></div>
+        <div class="skeleton-line medium"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line full"></div>
+      </div>
+    </div>
+
+    <!-- Empty Initial State -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-state-icon">⚖️</div>
+      <h3>Consulte a legislação civil com apoio de Inteligência Artificial</h3>
+      <p>Clique em uma das perguntas de exemplo acima ou digite uma dúvida para ver as previsões dos modelos.</p>
+    </div>
+
+    <!-- ======================================================================
+         TAB 1: Comparação Lado a Lado (Default View)
+         ====================================================================== -->
+    <div class="tab-pane active" id="pane-compare" role="tabpanel">
+      <div id="compare-results" style="display: none;">
+        <!-- Comparison Summary Header -->
+        <div class="comparison-summary-card" id="compare-summary-banner">
+          <div class="summary-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Concordância Top-1</span>
+              <span class="metric-value" id="summary-agreement">—</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Latência Clássico (TF-IDF+MLP)</span>
+              <span class="metric-value" id="summary-latency-classic">—</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Latência Moderno (BERT+mT0)</span>
+              <span class="metric-value" id="summary-latency-modern">—</span>
+            </div>
+          </div>
+          <div id="summary-verdict-pill"></div>
+        </div>
+
+        <!-- Dual Column Grid -->
+        <div class="comparison-grid">
+          <!-- Coluna Clássico -->
+          <div class="compare-column">
+            <div class="column-header classic-head">
+              <span class="column-header-title">⚡ Modelo Clássico (TF-IDF + MLP)</span>
+              <span class="badge badge-latency" id="classic-compare-latency">—</span>
+            </div>
+            <div id="classic-compare-content"></div>
+          </div>
+
+          <!-- Coluna Moderno -->
+          <div class="compare-column">
+            <div class="column-header modern-head">
+              <span class="column-header-title">🧠 Modelo Moderno (BERTimbau + mT0)</span>
+              <span class="badge badge-latency" id="modern-compare-latency">—</span>
+            </div>
+            <div id="modern-compare-content"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         TAB 2: Modelo Moderno (BERTimbau + mT0)
+         ====================================================================== -->
+    <div class="tab-pane" id="pane-modern" role="tabpanel">
+      <div id="modern-results" style="display: none;">
+        <!-- Hero Card da Resposta Gerada pelo mT0 ou Abstenção -->
+        <div id="modern-hero-container"></div>
+
+        <!-- Dispositivos Legislativos do MongoDB -->
+        <div class="section-title">
+          <span>📚 Dispositivos Legais Relevantes Recuperados (MongoDB / ChromaDB)</span>
+        </div>
+        <div class="article-cards-grid" id="modern-articles-container"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         TAB 3: Modelo Clássico (TF-IDF + MLP)
+         ====================================================================== -->
+    <div class="tab-pane" id="pane-classic" role="tabpanel">
+      <div id="classic-results" style="display: none;">
+        <!-- Status Bar do Clássico -->
+        <div class="comparison-summary-card" style="margin-bottom: 1.25rem;">
+          <div class="summary-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Tempo de Execução</span>
+              <span class="metric-value" id="classic-solo-latency">—</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Artigos Classificados</span>
+              <span class="metric-value">2.017 dispositivos do Código Civil</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Mecanismo</span>
+              <span class="metric-value">TF-IDF (5.000 termos) + PyTorch MLP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de Artigos Ranqueados com Probabilidade Softmax -->
+        <div class="section-title">
+          <span>🏆 Top Artigos Previstos pelo Classificador Neural</span>
+        </div>
+        <div class="article-cards-grid" id="classic-articles-container"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================
+       JudAI Footer
+       ======================================================================== -->
+  <footer class="judai-footer">
+    <p>
+      <strong>JudAI — RAG Jurídico Híbrido</strong> • Código Civil Brasileiro (Lei nº 10.406/2002) • 2.017 Artigos Vigentes Indexados.<br>
+      Pipeline Moderno: <code>neuralmind/bert-base-portuguese-cased</code> + <code>ChromaDB</code> + <code>bigscience/mt0-base</code>.<br>
+      Pipeline Clássico: <code>TF-IDF Vectorizer</code> + <code>PyTorch MLP (512d)</code> com softmax sobre 2.017 classes.
+    </p>
+  </footer>
+
+  <!-- ========================================================================
+       JudAI Vanilla ES6+ Application Logic
+       ======================================================================== -->
+  <script>
+    // Global Application State
+    const AppState = {
+      activeTab: 'compare', // 'compare', 'modern', 'classic'
+      currentQuery: '',
+      currentTopK: 3,
+      isLoading: false,
+      lastResults: {
+        compare: null,
+        modern: null,
+        classic: null
+      }
+    };
+
+    // DOM Elements
+    const elements = {
+      queryInput: document.getElementById('query-input'),
+      clearBtn: document.getElementById('clear-btn'),
+      topKSelect: document.getElementById('top-k-select'),
+      submitBtn: document.getElementById('submit-btn'),
+      skeletonLoader: document.getElementById('skeleton-loader'),
+      loadingMessage: document.getElementById('loading-message'),
+      emptyState: document.getElementById('empty-state'),
+      errorContainer: document.getElementById('error-container'),
+      systemStatusText: document.getElementById('system-status-text'),
+      systemStatusPill: document.getElementById('system-status-pill'),
+      // Tabs
+      panes: {
+        compare: document.getElementById('pane-compare'),
+        modern: document.getElementById('pane-modern'),
+        classic: document.getElementById('pane-classic')
+      },
+      tabBtns: {
+        compare: document.getElementById('tab-btn-compare'),
+        modern: document.getElementById('tab-btn-modern'),
+        classic: document.getElementById('tab-btn-classic')
+      },
+      // Results areas
+      compareResults: document.getElementById('compare-results'),
+      modernResults: document.getElementById('modern-results'),
+      classicResults: document.getElementById('classic-results')
+    };
+
+    // Initialize Application
+    document.addEventListener('DOMContentLoaded', () => {
+      checkSystemHealth();
+      setupInputListeners();
+    });
+
+    // Setup input listeners for dynamic clear button & shortcuts
+    function setupInputListeners() {
+      elements.queryInput.addEventListener('input', (e) => {
+        elements.clearBtn.style.display = e.target.value.trim() ? 'block' : 'none';
+      });
+
+      // Clear button
+      window.clearSearchInput = function() {
+        elements.queryInput.value = '';
+        elements.clearBtn.style.display = 'none';
+        elements.queryInput.focus();
+      };
+    }
+
+    // Switch Tabs
+    window.switchTab = function(tabName) {
+      if (AppState.activeTab === tabName) return;
+      AppState.activeTab = tabName;
+
+      // Update button classes
+      Object.keys(elements.tabBtns).forEach(name => {
+        const btn = elements.tabBtns[name];
+        btn.classList.remove('active', 'compare-active', 'modern-active', 'classic-active');
+        btn.setAttribute('aria-selected', name === tabName ? 'true' : 'false');
+      });
+
+      const activeBtn = elements.tabBtns[tabName];
+      activeBtn.classList.add('active', `${tabName}-active`);
+
+      // Update Panes visibility
+      Object.keys(elements.panes).forEach(name => {
+        elements.panes[name].classList.toggle('active', name === tabName);
+      });
+
+      // If there's an ongoing query and results exist for this tab, or re-render
+      if (AppState.currentQuery && !AppState.isLoading) {
+        ensureTabHasResults(tabName);
+      }
+    };
+
+    // Quick fill and search from example chips
+    window.setQueryAndSearch = function(queryText) {
+      elements.queryInput.value = queryText;
+      elements.clearBtn.style.display = 'block';
+      executeSearch(queryText);
+    };
+
+    // Handle form submit
+    window.handleSearchSubmit = function(event) {
+      event.preventDefault();
+      const query = elements.queryInput.value.trim();
+      if (!query) return;
+      executeSearch(query);
+    };
+
+    // Check system status via /models/status or /health
+    async function checkSystemHealth() {
+      try {
+        const response = await fetch('/models/status');
+        if (response.ok) {
+          const data = await response.json();
+          const totalArtigos = data.total_artigos_mongodb || 2017;
+          elements.systemStatusText.textContent = `Online • ${totalArtigos.toLocaleString('pt-BR')} Artigos CC2002 • Modelos Ativos`;
+        } else {
+          // Fallback to /health
+          const healthRes = await fetch('/health');
+          if (healthRes.ok) {
+            elements.systemStatusText.textContent = 'Online • API JudAI Ativa';
+          } else {
+            elements.systemStatusText.textContent = 'API Offline';
+            elements.systemStatusPill.querySelector('.status-dot').style.backgroundColor = '#ef4444';
+          }
+        }
+      } catch (err) {
+        elements.systemStatusText.textContent = 'Conectando ao JudAI...';
+      }
+    }
+
+    // Execute Search based on current active tab or refresh all
+    async function executeSearch(query) {
+      AppState.currentQuery = query;
+      AppState.currentTopK = parseInt(elements.topKSelect.value, 10) || 3;
+      AppState.isLoading = true;
+
+      showError(null);
+      elements.emptyState.style.display = 'none';
+      setLoading(true);
+
+      try {
+        if (AppState.activeTab === 'compare') {
+          await runCompareSearch(query, AppState.currentTopK);
+        } else if (AppState.activeTab === 'modern') {
+          await runModernSearch(query, AppState.currentTopK);
+        } else if (AppState.activeTab === 'classic') {
+          await runClassicSearch(query, AppState.currentTopK);
+        }
+      } catch (err) {
+        showError(`Erro ao consultar modelos: ${err.message || 'Falha de comunicação com o servidor.'}`);
+      } finally {
+        setLoading(false);
+        AppState.isLoading = false;
+      }
+    }
+
+    // Ensure tab has data when switching tabs
+    async function ensureTabHasResults(tabName) {
+      if (tabName === 'compare' && !AppState.lastResults.compare && AppState.currentQuery) {
+        setLoading(true);
+        try {
+          await runCompareSearch(AppState.currentQuery, AppState.currentTopK);
+        } finally {
+          setLoading(false);
+        }
+      } else if (tabName === 'modern' && !AppState.lastResults.modern && AppState.currentQuery) {
+        setLoading(true);
+        try {
+          await runModernSearch(AppState.currentQuery, AppState.currentTopK);
+        } finally {
+          setLoading(false);
+        }
+      } else if (tabName === 'classic' && !AppState.lastResults.classic && AppState.currentQuery) {
+        setLoading(true);
+        try {
+          await runClassicSearch(AppState.currentQuery, AppState.currentTopK);
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+
+    // 1. Run Search for Compare Tab
+    async function runCompareSearch(query, top_k) {
+      elements.loadingMessage.textContent = 'Executando busca comparativa simultânea nos modelos Clássico e Moderno...';
+      
+      const response = await fetch('/search/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, top_k })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Falha no endpoint /search/compare (HTTP ${response.status})`);
+      }
+
+      const data = await response.json();
+      AppState.lastResults.compare = data;
+      AppState.lastResults.classic = data.classico;
+      AppState.lastResults.modern = data.moderno;
+
+      renderCompareView(data);
+    }
+
+    // 2. Run Search for Modern Tab (BERTimbau + mT0)
+    async function runModernSearch(query, top_k) {
+      elements.loadingMessage.textContent = 'Calculando embeddings BERTimbau e gerando resposta com mT0-base...';
+      
+      const response = await fetch('/search/bert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, top_k })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Falha no endpoint /search/bert (HTTP ${response.status})`);
+      }
+
+      const data = await response.json();
+      AppState.lastResults.modern = data;
+
+      renderModernView(data);
+    }
+
+    // 3. Run Search for Classic Tab (TF-IDF + MLP)
+    async function runClassicSearch(query, top_k) {
+      elements.loadingMessage.textContent = 'Vetorizando termos com TF-IDF e classificando com PyTorch MLP...';
+      
+      const response = await fetch('/search/tfidf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, top_k })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Falha no endpoint /search/tfidf (HTTP ${response.status})`);
+      }
+
+      const data = await response.json();
+      AppState.lastResults.classic = data;
+
+      renderClassicView(data);
+    }
+
+    // ========================================================================
+    // Rendering Functions
+    // ========================================================================
+
+    // Render Side-by-Side Comparison
+    function renderCompareView(data) {
+      const classico = data.classico || {};
+      const moderno = data.moderno || {};
+      const comp = data.comparacao || {};
+
+      // Latencies
+      const latClassico = classico.execution_time_ms ? `${classico.execution_time_ms.toFixed(1)} ms` : '—';
+      const latModerno = moderno.execution_time_ms ? `${moderno.execution_time_ms.toFixed(1)} ms` : '—';
+
+      document.getElementById('classic-compare-latency').textContent = `⚡ ${latClassico}`;
+      document.getElementById('modern-compare-latency').textContent = `🧠 ${latModerno}`;
+      document.getElementById('summary-latency-classic').textContent = `⚡ ${latClassico}`;
+      document.getElementById('summary-latency-modern').textContent = `🧠 ${latModerno}`;
+
+      // Concordance calculation
+      const top1ClassicId = (classico.results && classico.results[0]) ? classico.results[0].artigo_id : null;
+      const top1ModernId = (moderno.results && moderno.results[0]) ? moderno.results[0].artigo_id : null;
+      const agreementSpan = document.getElementById('summary-agreement');
+      const verdictPill = document.getElementById('summary-verdict-pill');
+
+      if (top1ClassicId && top1ModernId && top1ClassicId === top1ModernId) {
+        agreementSpan.innerHTML = `<span style="color: var(--emerald-primary)">✅ Total (${escapeHtml(classico.results[0].citacao)})</span>`;
+        verdictPill.innerHTML = `<span class="badge badge-confidence-high">Alta Consistência Entre Modelos</span>`;
+      } else if (top1ClassicId && top1ModernId) {
+        agreementSpan.innerHTML = `<span style="color: var(--amber-primary)">⚠️ Divergente (${top1ClassicId} vs ${top1ModernId})</span>`;
+        verdictPill.innerHTML = `<span class="badge badge-confidence-low">Priorização Complementar</span>`;
+      } else {
+        agreementSpan.textContent = '—';
+        verdictPill.innerHTML = '';
+      }
+
+      // Render Classic Column
+      const classicContainer = document.getElementById('classic-compare-content');
+      classicContainer.innerHTML = '';
+      if (classico.results && classico.results.length > 0) {
+        classico.results.forEach((art, idx) => {
+          classicContainer.appendChild(createClassicArticleCard(art, idx + 1));
+        });
+      } else {
+        classicContainer.innerHTML = '<p style="color: var(--slate-500); padding: 1rem;">Nenhum artigo previsto.</p>';
+      }
+
+      // Render Modern Column
+      const modernContainer = document.getElementById('modern-compare-content');
+      modernContainer.innerHTML = '';
+
+      // Check if abstained
+      const isAbstained = moderno.abstenção || moderno.abstencao;
+      if (isAbstained) {
+        modernContainer.appendChild(createRefusalCard(moderno.resposta_gerada, moderno.results));
+      } else {
+        modernContainer.appendChild(createHeroAnswerCard(moderno.resposta_gerada, latModerno, moderno.results));
+      }
+
+      // Modern retrieved articles
+      if (moderno.results && moderno.results.length > 0) {
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'section-title';
+        titleDiv.style.marginTop = '1rem';
+        titleDiv.innerHTML = `<span>Artigos Citados na Fundamentação:</span>`;
+        modernContainer.appendChild(titleDiv);
+
+        moderno.results.forEach(art => {
+          modernContainer.appendChild(createModernArticleCard(art));
+        });
+      }
+
+      elements.compareResults.style.display = 'block';
+    }
+
+    // Render Modern View
+    function renderModernView(data) {
+      const heroContainer = document.getElementById('modern-hero-container');
+      const articlesContainer = document.getElementById('modern-articles-container');
+      heroContainer.innerHTML = '';
+      articlesContainer.innerHTML = '';
+
+      const lat = data.execution_time_ms ? `${data.execution_time_ms.toFixed(1)} ms` : '—';
+      const isAbstained = data.abstenção || data.abstencao;
+
+      if (isAbstained) {
+        heroContainer.appendChild(createRefusalCard(data.resposta_gerada, data.results));
+      } else {
+        heroContainer.appendChild(createHeroAnswerCard(data.resposta_gerada, lat, data.results));
+      }
+
+      if (data.results && data.results.length > 0) {
+        data.results.forEach(art => {
+          articlesContainer.appendChild(createModernArticleCard(art));
+        });
+      } else {
+        articlesContainer.innerHTML = '<p style="color: var(--slate-500); padding: 1rem;">Nenhum artigo retornado.</p>';
+      }
+
+      elements.modernResults.style.display = 'block';
+    }
+
+    // Render Classic View
+    function renderClassicView(data) {
+      const articlesContainer = document.getElementById('classic-articles-container');
+      articlesContainer.innerHTML = '';
+
+      const lat = data.execution_time_ms ? `${data.execution_time_ms.toFixed(1)} ms` : '—';
+      document.getElementById('classic-solo-latency').textContent = `⚡ ${lat}`;
+
+      if (data.results && data.results.length > 0) {
+        data.results.forEach((art, idx) => {
+          articlesContainer.appendChild(createClassicArticleCard(art, idx + 1));
+        });
+      } else {
+        articlesContainer.innerHTML = '<p style="color: var(--slate-500); padding: 1rem;">Nenhum artigo previsto.</p>';
+      }
+
+      elements.classicResults.style.display = 'block';
+    }
+
+    // Helper: Create Hero Answer Card (mT0 Response)
+    function createHeroAnswerCard(resposta, latencia, articles) {
+      const card = document.createElement('div');
+      card.className = 'hero-response-card';
+
+      const maxSim = (articles && articles[0] && articles[0].similarity_score) 
+        ? `${(articles[0].similarity_score * 100).toFixed(1)}%` 
+        : 'Alta';
+
+      card.innerHTML = `
+        <div class="hero-card-header">
+          <div class="hero-card-title">
+            <span>✨ Resposta Explicativa Gerada (mT0-base)</span>
+          </div>
+          <div class="badge-group">
+            <span class="badge badge-confidence-high">Similaridade: ${maxSim}</span>
+            <span class="badge badge-latency">⚡ ${escapeHtml(latencia)}</span>
+          </div>
+        </div>
+        <div class="hero-answer-body">
+          ${escapeHtml(resposta || 'Nenhuma resposta formulada.')}
+        </div>
+      `;
+      return card;
+    }
+
+    // Helper: Create Refusal Card (Abstention)
+    function createRefusalCard(resposta, articles) {
+      const card = document.createElement('div');
+      card.className = 'refusal-card';
+
+      const topSim = (articles && articles[0] && articles[0].similarity_score)
+        ? (articles[0].similarity_score * 100).toFixed(1)
+        : '0.0';
+
+      card.innerHTML = `
+        <div class="refusal-header">
+          <span>🛡️ Mecanismo de Abstenção Ativado</span>
+          <span class="badge badge-confidence-low">Similaridade (${topSim}%) &lt; Limiar (70,0%)</span>
+        </div>
+        <div class="refusal-message">
+          ${escapeHtml(resposta || 'Não encontrei informação suficiente no Código Civil para responder a essa pergunta.')}
+        </div>
+        <div class="refusal-explanation">
+          <strong>Proteção contra alucinação de IA:</strong> O limiar operacional de segurança identificou que a consulta não possui aderência suficiente com o Código Civil brasileiro. O modelo se absteve de gerar resposta inverídica.
+        </div>
+      `;
+      return card;
+    }
+
+    // Helper: Create Modern Article Card
+    function createModernArticleCard(art) {
+      const card = document.createElement('div');
+      card.className = 'article-card';
+
+      const simPct = art.similarity_score ? (art.similarity_score * 100).toFixed(1) : '—';
+      const simClass = (art.similarity_score >= 0.70) ? 'badge-confidence-high' : 'badge-confidence-low';
+      const previewText = art.texto ? (art.texto.substring(0, 190) + (art.texto.length > 190 ? '...' : '')) : '';
+
+      card.innerHTML = `
+        <div class="article-header">
+          <div class="article-citation">
+            <span>${escapeHtml(art.citacao || 'Código Civil')}</span>
+            <span class="article-id-sub">[${escapeHtml(art.artigo_id || '')}]</span>
+          </div>
+          <span class="badge ${simClass}">Similaridade Cosseno: ${simPct}%</span>
+        </div>
+        <div class="legal-text-preview">${escapeHtml(previewText)}</div>
+        <details class="legal-text-details">
+          <summary>Ver texto legal completo</summary>
+          <div class="legal-text-full">${escapeHtml(art.texto || 'Texto não disponível')}</div>
+        </details>
+      `;
+      return card;
+    }
+
+    // Helper: Create Classic Article Card with Softmax Progress Bar
+    function createClassicArticleCard(art, rank) {
+      const card = document.createElement('div');
+      card.className = 'article-card';
+
+      const scorePct = art.score ? (art.score * 100).toFixed(1) : '0.0';
+      const previewText = art.texto ? (art.texto.substring(0, 190) + (art.texto.length > 190 ? '...' : '')) : '';
+
+      card.innerHTML = `
+        <div class="article-header">
+          <div class="article-citation">
+            <span class="badge badge-model-info">Top ${rank}</span>
+            <span>${escapeHtml(art.citacao || 'Código Civil')}</span>
+            <span class="article-id-sub">[${escapeHtml(art.artigo_id || '')}]</span>
+          </div>
+          <span class="badge badge-confidence-med">${scorePct}% Softmax</span>
+        </div>
+
+        <!-- Softmax Probability Bar -->
+        <div class="prob-bar-wrapper">
+          <div class="prob-bar-fill" style="width: ${Math.max(4, parseFloat(scorePct))}%"></div>
+          <div class="prob-bar-text">${scorePct}% de probabilidade</div>
+        </div>
+
+        <div class="legal-text-preview">${escapeHtml(previewText)}</div>
+        <details class="legal-text-details">
+          <summary>Ver texto legal completo</summary>
+          <div class="legal-text-full">${escapeHtml(art.texto || 'Texto não disponível')}</div>
+        </details>
+      `;
+      return card;
+    }
+
+    // Loading State Handler
+    function setLoading(isLoading) {
+      elements.skeletonLoader.style.display = isLoading ? 'flex' : 'none';
+      elements.submitBtn.disabled = isLoading;
+
+      if (isLoading) {
+        elements.compareResults.style.display = 'none';
+        elements.modernResults.style.display = 'none';
+        elements.classicResults.style.display = 'none';
+      }
+    }
+
+    // Error State Handler
+    function showError(message) {
+      if (!message) {
+        elements.errorContainer.style.display = 'none';
+        elements.errorContainer.innerHTML = '';
+        return;
+      }
+      elements.errorContainer.style.display = 'block';
+      elements.errorContainer.innerHTML = `
+        <div class="error-banner">
+          <span>⚠️</span>
+          <span>${escapeHtml(message)}</span>
+        </div>
+      `;
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

@@ -10,3 +10,13 @@ python-dotenv
 beautifulsoup4
 lxml
 requests
+torch
+transformers
+sentencepiece
+scikit-learn
+pandas
+matplotlib
+accelerate
+datasets
+httpx
+pytest
