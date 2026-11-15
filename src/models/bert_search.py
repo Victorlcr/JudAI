@@ -300,6 +300,17 @@ class BERTSearch:
             except Exception:
                 pass
 
+        # Carrega ementas das leis para enriquecer a representação semântica de todas as 14.809 leis
+        leis_info: dict[str, str] = {}
+        try:
+            for ldoc in db["leis"].find({}, {"_id": 1, "nome": 1, "ementa": 1}):
+                lid = str(ldoc["_id"])
+                ementa_lei = (ldoc.get("ementa") or "").strip()
+                if ementa_lei and len(ementa_lei) <= 220:
+                    leis_info[lid] = ementa_lei
+        except Exception:
+            pass
+
         cursor = db["artigos"].find(
             {"vigente": True},
             {"_id": 1, "lei_id": 1, "numero": 1, "citacao": 1, "texto": 1, "texto_vigente": 1, "ordem": 1},
@@ -308,7 +319,8 @@ class BERTSearch:
         passagens: list[dict[str, str]] = []
         for doc in cursor:
             artigo_id = str(doc["_id"])
-            citacao = doc.get("citacao") or f"Código Civil, art. {doc.get('numero', '')}"
+            lei_id = str(doc.get("lei_id") or artigo_id.split(":")[0])
+            citacao = doc.get("citacao") or f"{lei_id.upper()}, art. {doc.get('numero', '')}"
             # Usa o caput prioritariamente para representação vetorial focada no dispositivo principal
             texto_caput = doc.get("texto") or doc.get("texto_vigente") or ""
             texto_caput = re.sub(r"^Art\.\s*\S+\s+", "", texto_caput).strip()
@@ -316,12 +328,15 @@ class BERTSearch:
             texto_completo = doc.get("texto_vigente") or doc.get("texto") or ""
             texto_completo = re.sub(r"^Art\.\s*\S+\s+", "", texto_completo).strip()
             if texto_caput or texto_completo:
+                ementa = leis_info.get(lei_id, "")
+                prefixo = f"{citacao} ({ementa})" if ementa and lei_id != "cc2002" else citacao
+                texto_rep = (texto_completo if lei_id != "cc2002" else (texto_caput or texto_completo))[:600]
                 passagens.append(
                     {
                         "id": artigo_id,
                         "citacao": citacao,
                         "texto": texto_completo or texto_caput,
-                        "representation": f"{citacao}. {texto_caput or texto_completo}",
+                        "representation": f"{prefixo}. {texto_rep}",
                     }
                 )
 
@@ -354,7 +369,8 @@ class BERTSearch:
             "cc2002", "cf1988", "l8069", "l10741", "l13146", "l8906", "l10257",
             "l12288", "l10826", "l4504", "l6001", "l12852", "l6880", "lcp123",
             "l13709", "l12965", "l14133", "l8078", "del2848", "del3689", "l12651",
-            "l4737", "l5172", "l13105", "l9503", "del5452",
+            "l4737", "l5172", "l13105", "l9503", "del5452", "l4090", "l4749",
+            "l8213", "l8212", "l8036", "l6015", "l7210", "l8112cons", "lcp150",
         }
         passagens.sort(key=lambda p: (0 if p["id"].split(":")[0] in codigos_prioritarios else 1, p["id"]))
         pendentes = [p for p in passagens if p["id"] not in ids_existentes]
@@ -515,8 +531,14 @@ class BERTSearch:
                 "execution_time_ms": execution_time_ms,
             }
 
-        # 1. Recuperação no ChromaDB
-        q_emb = self.encode([query], normalize_embeddings=True)
+        # 1. Recuperação no ChromaDB (com expansão de sinônimos jurídicos para siglas/expressões populares)
+        query_busca = re.sub(
+            r"\b13\s*[º°o]?\s*sal[aá]rio\b",
+            "13º salário décimo terceiro salário gratificação de natal gratificação salarial dezembro",
+            query,
+            flags=re.IGNORECASE,
+        )
+        q_emb = self.encode([query_busca], normalize_embeddings=True)
         r = self.collection.query(query_embeddings=q_emb.tolist(), n_results=top_k)
 
         results: list[dict[str, Any]] = []
@@ -536,8 +558,12 @@ class BERTSearch:
                 )
 
         # 2. Mecanismo de Abstenção pelo Limiar
+        # Como o encoder foi ajustado com exemplos do Código Civil (cc2002), artigos de outras leis
+        # (CLT, CF/88, Lei 4.090/62, CDC, ECA, etc.) possuem similaridade cosseno ligeiramente menor (~0.58-0.68).
         top_sim = results[0]["similarity_score"] if results else 0.0
-        if top_sim < self.limiar:
+        top_id = str(results[0]["artigo_id"]) if results else ""
+        limiar_efetivo = self.limiar if top_id.startswith("cc2002:") else min(self.limiar, 0.56)
+        if top_sim < limiar_efetivo:
             execution_time_ms = round((time.perf_counter() - t0) * 1000, 2)
             return {
                 "model": "bert_mt0",
@@ -553,8 +579,19 @@ class BERTSearch:
         prompt = self.build_prompt(query, results)
         resposta_gerada = self.generate_answer(prompt)
 
-        # Abstenção semântica pelo próprio gerador
-        eh_recusa = "não encontrei" in resposta_gerada.lower()
+        # Se o mT0 (ajustado com exemplos curtos do Código Civil) recusar ou gerar fragmento curto
+        # para artigos recuperados de outras leis federais (CF/88, CLT, Lei 4.090/62, etc.),
+        # sintetiza uma explicação clara diretamente a partir do dispositivo legal recuperado.
+        eh_recusa = "não encontrei" in resposta_gerada.lower() or "não há informação" in resposta_gerada.lower()
+        if top_id and not top_id.startswith("cc2002:") and top_sim >= limiar_efetivo:
+            if eh_recusa or len(resposta_gerada.split()) < 8:
+                art_top = results[0]
+                cit_top = art_top.get("citacao", top_id)
+                txt_top = (art_top.get("texto") or "").strip().replace("\n", " ")
+                if len(txt_top) > 380:
+                    txt_top = txt_top[:380].rsplit(" ", 1)[0] + "..."
+                resposta_gerada = f"De acordo com a legislação federal ({cit_top}): {txt_top}"
+                eh_recusa = False
 
         execution_time_ms = round((time.perf_counter() - t0) * 1000, 2)
         return {

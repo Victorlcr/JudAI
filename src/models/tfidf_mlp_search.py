@@ -53,6 +53,31 @@ STOP_WORDS = {
     'por', 'que', 'se', 'é', 'não', 'dos', 'das', 'aos', 'ou', 'como', 'sobre'
 }
 
+SINONIMOS_JURIDICOS: list[tuple[str, str]] = [
+    (r"\b13\s*[º°o]?\s*sal[aá]rio\b", "decimo terceiro salario gratificacao salarial dezembro avos natalina natal 090"),
+    (r"\bd[eé]cimo\s+terceiro\s*sal[aá]rio\b", "decimo terceiro salario gratificacao salarial dezembro avos natalina natal 090"),
+    (r"\bd[eé]cimo\s+terceiro\b", "decimo terceiro salario gratificacao salarial dezembro avos natalina natal 090"),
+    (r"\bfgts\b", "fundo de garantia do tempo de servico 036"),
+    (r"\bclt\b", "consolidacao das leis do trabalho 452"),
+    (r"\bcdc\b", "codigo de defesa do consumidor 078"),
+    (r"\beca\b", "estatuto da crianca e do adolescente 069"),
+    (r"\blgpd\b", "lei geral de protecao de dados pessoais 709"),
+]
+
+
+def expandir_consulta_juridica(query: str) -> str:
+    """Expande siglas e expressões populares jurídicas (ex.: 13º salário -> gratificação de natal)."""
+    if not isinstance(query, str):
+        return ""
+    q_lower = query.lower()
+    extras: list[str] = []
+    for padrao, expansao in SINONIMOS_JURIDICOS:
+        if re.search(padrao, q_lower):
+            extras.append(expansao)
+    if extras:
+        return f"{query} {' '.join(extras)}"
+    return query
+
 
 def limpar_texto(texto: Any) -> str:
     """Normaliza texto removendo pontuação, excesso de espaços e convertendo para minúsculas."""
@@ -138,6 +163,7 @@ class TfidfMLPSearch:
 
         self.model: Optional[ModeloClassicoTFIDF] = None
         self.vectorizer: Optional[TfidfVectorizer] = None
+        self.corpus_vectorizer: Optional[TfidfVectorizer] = None
         self.label_encoder: Optional[LabelEncoder] = None
         self.artigos_dict: dict[str, dict[str, str]] = {}
         self.corpus_ids: list[str] = []
@@ -172,6 +198,17 @@ class TfidfMLPSearch:
         if db is None:
             db = MongoConnection().get_db()
 
+        # Carrega ementas/nomes das leis para enriquecer a busca TF-IDF em todas as 14.809 leis
+        leis_info: dict[str, str] = {}
+        try:
+            for ldoc in db["leis"].find({}, {"_id": 1, "nome": 1, "ementa": 1}):
+                lid = str(ldoc["_id"])
+                nome_lei = ldoc.get("nome") or ""
+                ementa_lei = ldoc.get("ementa") or ""
+                leis_info[lid] = f"{nome_lei} {ementa_lei}".strip()
+        except Exception:
+            pass
+
         cursor = db["artigos"].find(
             {"vigente": True},
             {"_id": 1, "lei_id": 1, "numero": 1, "citacao": 1, "texto": 1, "texto_vigente": 1, "ordem": 1},
@@ -189,7 +226,8 @@ class TfidfMLPSearch:
             "cc2002", "cf1988", "l8069", "l10741", "l13146", "l8906", "l10257",
             "l12288", "l10826", "l4504", "l6001", "l12852", "l6880", "lcp123",
             "l13709", "l12965", "l14133", "l8078", "del2848", "del3689", "l12651",
-            "l4737", "l5172", "l13105", "l9503", "del5452",
+            "l4737", "l5172", "l13105", "l9503", "del5452", "l4090", "l4749",
+            "l8213", "l8212", "l8036", "l6015", "l7210", "l8112cons", "lcp150",
         }
         restringir_mlp = total_vigentes_db > 15000
 
@@ -204,14 +242,15 @@ class TfidfMLPSearch:
                 "texto": texto_artigo
             }
 
-            texto_limpo = limpar_texto(doc.get("texto", "") or texto_artigo)
-            if texto_limpo:
+            texto_limpo_caput = limpar_texto(doc.get("texto", "") or texto_artigo)
+            texto_limpo_completo = limpar_texto(texto_artigo)
+            if texto_limpo_completo:
                 self.corpus_ids.append(id_artigo)
-                corpus_textos_limpos.append(f"{limpar_texto(citacao)} {texto_limpo}")
+                contexto_lei = limpar_texto(leis_info.get(lei_id, ""))
+                corpus_textos_limpos.append(f"{limpar_texto(citacao)} {contexto_lei} {texto_limpo_completo}")
                 if not restringir_mlp or lei_id in codigos_principais:
-                    # Quando há muitas leis, usa cc2002 na MLP supervisionada ou todos se <= 15.000
                     if not restringir_mlp or lei_id == "cc2002":
-                        for var in gerar_perguntas_sinteticas(texto_limpo):
+                        for var in gerar_perguntas_sinteticas(texto_limpo_caput):
                             dados_sinteticos.append({"texto": var, "label": id_artigo, "origem": "sintetico"})
 
         df_sintetico = pd.DataFrame(dados_sinteticos)
@@ -256,12 +295,14 @@ class TfidfMLPSearch:
         df_treino['label_encoded'] = self.label_encoder.transform(df_treino['label'])
         df_validacao['label_encoded'] = self.label_encoder.transform(df_validacao['label'])
 
-        # 5. Vetorização TF-IDF (aprende o vocabulário nos dados de treino e transforma todo o corpus)
+        # 5. Vetorização TF-IDF (aprende o vocabulário nos dados de treino para a MLP e em todo o corpus para busca ampla)
         self.vectorizer = TfidfVectorizer(max_features=max_features)
         self.vectorizer.fit(df_treino['texto'])
         if corpus_textos_limpos:
-            self.corpus_tfidf_matrix = self.vectorizer.transform(corpus_textos_limpos)
+            self.corpus_vectorizer = TfidfVectorizer(max_features=50000, sublinear_tf=True)
+            self.corpus_tfidf_matrix = self.corpus_vectorizer.fit_transform(corpus_textos_limpos)
         else:
+            self.corpus_vectorizer = None
             self.corpus_tfidf_matrix = None
         X_treino_tfidf = self.vectorizer.transform(df_treino['texto'])
         X_valid_tfidf = self.vectorizer.transform(df_validacao['texto'])
@@ -398,7 +439,14 @@ class TfidfMLPSearch:
         # 6. Matriz TF-IDF esparsa do corpus completo (todas as leis do MongoDB)
         if self.corpus_tfidf_matrix is not None and self.corpus_ids:
             with open(target_dir / "corpus_tfidf.pkl", "wb") as f:
-                pickle.dump({"ids": self.corpus_ids, "matrix": self.corpus_tfidf_matrix}, f)
+                pickle.dump(
+                    {
+                        "ids": self.corpus_ids,
+                        "matrix": self.corpus_tfidf_matrix,
+                        "vectorizer": self.corpus_vectorizer,
+                    },
+                    f,
+                )
 
     def load(self, save_dir: Optional[Path | str] = None) -> bool:
         """Carrega os artefatos salvos em disco garantindo inferência instantânea."""
@@ -460,9 +508,11 @@ class TfidfMLPSearch:
                     corpus_data = pickle.load(f)
                     self.corpus_ids = corpus_data.get("ids", [])
                     self.corpus_tfidf_matrix = corpus_data.get("matrix", None)
+                    self.corpus_vectorizer = corpus_data.get("vectorizer", self.vectorizer)
             except Exception:
                 self.corpus_ids = []
                 self.corpus_tfidf_matrix = None
+                self.corpus_vectorizer = None
 
         self.is_loaded = True
         return True
@@ -517,33 +567,40 @@ class TfidfMLPSearch:
                 "score": score
             })
 
-        # Se a confiança Top-1 da MLP for baixa (< 0.15) e o corpus completo de todas as leis
-        # estiver indexado em TF-IDF, busca também nas 14.809 leis do corpus esparso
-        if self.corpus_tfidf_matrix is not None and self.corpus_ids and (not results or results[0]["score"] < 0.15):
-            sims = (self.corpus_tfidf_matrix @ vetor.T).toarray().ravel()
-            if len(sims) > 0:
-                top_corpus_idx = np.argsort(sims)[::-1][:top_k]
-                max_sim = float(sims[top_corpus_idx[0]]) if len(top_corpus_idx) > 0 else 0.0
-                mlp_top1 = results[0]["score"] if results else 0.0
-                if max_sim >= 0.45 and mlp_top1 < 0.10:
-                    # Quando há um casamento lexical forte em outra lei e a MLP tem incerteza alta
-                    corpus_results: list[dict[str, Any]] = []
-                    for c_idx in top_corpus_idx:
-                        sim_val = round(float(sims[c_idx]), 4)
-                        if sim_val <= 0:
-                            continue
-                        c_id = str(self.corpus_ids[int(c_idx)])
-                        info = self.artigos_dict.get(c_id, {})
-                        corpus_results.append({
-                            "artigo_id": c_id,
-                            "citacao": info.get("citacao", c_id),
-                            "texto": info.get("texto", ""),
-                            "score": sim_val,
-                        })
-                    for r in results:
-                        if r["artigo_id"] not in {cr["artigo_id"] for cr in corpus_results}:
-                            corpus_results.append(r)
-                    results = corpus_results[:top_k]
+        # Busca híbrida sobre todas as 14.809 leis do corpus esparso quando:
+        # 1) A consulta menciona termos/siglas jurídicas de outras leis, ou
+        # 2) A confiança da MLP não é alta (< 0.50) e há um casamento forte no corpus completo
+        if self.corpus_tfidf_matrix is not None and self.corpus_ids:
+            query_expandida = limpar_texto(expandir_consulta_juridica(query))
+            vec_engine = self.corpus_vectorizer or self.vectorizer
+            vetor_corpus = vec_engine.transform([query_expandida])
+            mlp_top1 = results[0]["score"] if results else 0.0
+            tem_expansao = query_expandida != query_limpa
+
+            if tem_expansao or mlp_top1 < 0.50:
+                sims = (self.corpus_tfidf_matrix @ vetor_corpus.T).toarray().ravel()
+                if len(sims) > 0:
+                    top_corpus_idx = np.argsort(sims)[::-1][:top_k]
+                    max_sim = float(sims[top_corpus_idx[0]]) if len(top_corpus_idx) > 0 else 0.0
+                    # Se houve expansão de sinônimo jurídico (ex: 13º salário, CLT, FGTS, CDC) ou se a MLP tem incerteza (< 0.10) e o TF-IDF tem alta similaridade
+                    if (tem_expansao and max_sim >= 0.20) or (mlp_top1 < 0.10 and max_sim >= 0.40):
+                        corpus_results: list[dict[str, Any]] = []
+                        for c_idx in top_corpus_idx:
+                            sim_val = round(float(sims[c_idx]), 4)
+                            if sim_val <= 0:
+                                continue
+                            c_id = str(self.corpus_ids[int(c_idx)])
+                            info = self.artigos_dict.get(c_id, {})
+                            corpus_results.append({
+                                "artigo_id": c_id,
+                                "citacao": info.get("citacao", c_id),
+                                "texto": info.get("texto", ""),
+                                "score": sim_val,
+                            })
+                        for r in results:
+                            if r["artigo_id"] not in {cr["artigo_id"] for cr in corpus_results}:
+                                corpus_results.append(r)
+                        results = corpus_results[:top_k]
 
         execution_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
 

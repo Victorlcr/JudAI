@@ -906,7 +906,7 @@
         </div>
         <div class="brand-title-wrap">
           <h1>JudAI <span class="version-badge">RAG Jurídico</span></h1>
-          <p>Inteligência Artificial aplicada à Legislação Civil Brasileira (Lei 10.406/2002)</p>
+          <p>Inteligência Artificial aplicada à Legislação Federal Brasileira (14.809 Leis • 113.710 Artigos Vigentes)</p>
         </div>
       </div>
 
@@ -1033,7 +1033,7 @@
     <!-- Empty Initial State -->
     <div class="empty-state" id="empty-state">
       <div class="empty-state-icon">⚖️</div>
-      <h3>Consulte a legislação civil com apoio de Inteligência Artificial</h3>
+      <h3>Consulte a legislação federal com apoio de Inteligência Artificial</h3>
       <p>Clique em uma das perguntas de exemplo acima ou digite uma dúvida para ver as previsões dos modelos.</p>
     </div>
 
@@ -1113,12 +1113,12 @@
               <span class="metric-value" id="classic-solo-latency">—</span>
             </div>
             <div class="metric-item">
-              <span class="metric-label">Artigos Classificados</span>
-              <span class="metric-value">2.017 dispositivos do Código Civil</span>
+              <span class="metric-label">Artigos Indexados</span>
+              <span class="metric-value" id="classic-solo-indexed">113.710 dispositivos federais</span>
             </div>
             <div class="metric-item">
               <span class="metric-label">Mecanismo</span>
-              <span class="metric-value">TF-IDF (5.000 termos) + PyTorch MLP</span>
+              <span class="metric-value">TF-IDF + PyTorch MLP (14.809 Leis)</span>
             </div>
           </div>
         </div>
@@ -1138,9 +1138,9 @@
        ======================================================================== -->
   <footer class="judai-footer">
     <p>
-      <strong>JudAI — RAG Jurídico Híbrido</strong> • Código Civil Brasileiro (Lei nº 10.406/2002) • 2.017 Artigos Vigentes Indexados.<br>
+      <strong>JudAI — RAG Jurídico Híbrido</strong> • Legislação Federal Brasileira (14.809 Leis) • 113.710 Artigos Vigentes Indexados.<br>
       Pipeline Moderno: <code>neuralmind/bert-base-portuguese-cased</code> + <code>ChromaDB</code> + <code>bigscience/mt0-base</code>.<br>
-      Pipeline Clássico: <code>TF-IDF Vectorizer</code> + <code>PyTorch MLP (512d)</code> com softmax sobre 2.017 classes.
+      Pipeline Clássico: <code>TF-IDF Vectorizer</code> + <code>PyTorch MLP (512d)</code> + Índice TF-IDF do Corpus Completo.
     </p>
   </footer>
 
@@ -1257,8 +1257,8 @@
         const response = await fetch('/models/status');
         if (response.ok) {
           const data = await response.json();
-          const totalArtigos = data.total_artigos_mongodb || 2017;
-          elements.systemStatusText.textContent = `Online • ${totalArtigos.toLocaleString('pt-BR')} Artigos CC2002 • Modelos Ativos`;
+          const totalArtigos = (data.classico && data.classico.artigos_indexados) || data.total_artigos_mongodb || 113710;
+          elements.systemStatusText.textContent = `Online • ${totalArtigos.toLocaleString('pt-BR')} Artigos Vigentes • Modelos Ativos`;
         } else {
           // Fallback to /health
           const healthRes = await fetch('/health');
@@ -1550,10 +1550,10 @@
           <span class="badge badge-confidence-low">Similaridade (${topSim}%) &lt; Limiar (70,0%)</span>
         </div>
         <div class="refusal-message">
-          ${escapeHtml(resposta || 'Não encontrei informação suficiente no Código Civil para responder a essa pergunta.')}
+          ${escapeHtml(resposta || 'Não encontrei informação suficiente na legislação consultada para responder a essa pergunta.')}
         </div>
         <div class="refusal-explanation">
-          <strong>Proteção contra alucinação de IA:</strong> O limiar operacional de segurança identificou que a consulta não possui aderência suficiente com o Código Civil brasileiro. O modelo se absteve de gerar resposta inverídica.
+          <strong>Proteção contra alucinação de IA:</strong> O limiar operacional de segurança identificou que a consulta não possui aderência suficiente com os dispositivos indexados. O modelo se absteve de gerar resposta inverídica.
         </div>
       `;
       return card;
