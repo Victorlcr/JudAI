@@ -334,8 +334,8 @@ def models_status(request: Request) -> ModelStatusResponse:
             artigos_indexados=count_chroma,
             limiar=bert.limiar,
             collection_name=bert.collection_name,
-            bert_model=bert.DEFAULT_BERT_MODEL if hasattr(bert, "DEFAULT_BERT_MODEL") else "neuralmind/bert-base-portuguese-cased",
-            mt0_model=bert.DEFAULT_MT0_MODEL if hasattr(bert, "DEFAULT_MT0_MODEL") else "bigscience/mt0-base",
+            bert_model=bert.model_name_or_path,
+            mt0_model=bert.generator_name_or_path,
             device=str(bert.device),
         )
     else:

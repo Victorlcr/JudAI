@@ -74,7 +74,7 @@ class BERTSearch:
     DEFAULT_BERT_MODEL: str = "neuralmind/bert-base-portuguese-cased"
     DEFAULT_MT0_MODEL: str = "bigscience/mt0-base"
     DEFAULT_COLLECTION_NAME: str = "cc_bert-juridico"
-    DEFAULT_LIMIAR: float = 0.70
+    DEFAULT_LIMIAR: float = 0.50
     CANONICAL_REFUSAL: str = (
         "Não encontrei informação suficiente no Código Civil para responder a essa pergunta."
     )
@@ -114,6 +114,15 @@ class BERTSearch:
             collection_name: Nome da coleção vetorial no ChromaDB (default: 'cc_bert-juridico').
             lazy_load: Se True, adia o carregamento de pesos pesados até a primeira inferência.
         """
+        # Se limiar não foi customizado explicitamente, tenta carregar de threshold.json
+        if limiar == self.DEFAULT_LIMIAR and (self.LOCAL_BERT_PATH / "threshold.json").exists():
+            try:
+                with open(self.LOCAL_BERT_PATH / "threshold.json", "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                    limiar = float(cfg.get("limiar", limiar))
+            except Exception:
+                pass
+
         self.limiar: float = limiar
         self.collection_name: str = collection_name
         self.device: str = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -146,10 +155,31 @@ class BERTSearch:
 
     @staticmethod
     def _resolve_model_path(local_path: Path, fallback_hf_name: str) -> str:
-        """Resolve o caminho do modelo priorizando checkpoints locais válidos."""
-        if local_path.exists():
-            if (local_path / "config.json").exists() or (local_path / "modules.json").exists():
-                return str(local_path.resolve())
+        """Resolve o caminho do modelo priorizando checkpoints locais válidos com pesos presentes."""
+        # Verifica no caminho direto (ex.: data/models/bert_juridico)
+        candidatos = [
+            local_path,
+            PROJECT_ROOT / "models" / local_path.name.replace("_", "-"),
+            Path.home() / "Desktop" / local_path.name.replace("_", "-"),
+        ]
+        for cand in candidatos:
+            if cand.exists():
+                has_weights = (
+                    (cand / "model.safetensors").exists()
+                    or (cand / "pytorch_model.bin").exists()
+                    or (cand / "model.safetensors.index.json").exists()
+                )
+                has_config = (cand / "config.json").exists() or (cand / "modules.json").exists()
+                if has_config and has_weights:
+                    return str(cand.resolve())
+                elif has_config and not has_weights:
+                    logger.warning(
+                        "Pasta local '%s' contém configurações, mas os pesos neurais "
+                        "(model.safetensors ou pytorch_model.bin) não foram encontrados. "
+                        "Recorrendo ao modelo '%s'.",
+                        cand,
+                        fallback_hf_name,
+                    )
         return fallback_hf_name
 
     def _ensure_encoder_loaded(self) -> None:
