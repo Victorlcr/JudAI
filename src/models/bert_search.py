@@ -279,14 +279,19 @@ class BERTSearch:
         """
         client = self.chroma_connection.get_client()
 
-        # Verifica se já está indexado
-        if not force:
+        if db is None:
+            db = MongoConnection().get_db()
+
+        esperado_mongo = db["artigos"].count_documents({"vigente": True})
+
+        # Verifica se já está indexado com toda a base atual do MongoDB
+        if not force and esperado_mongo > 0:
             try:
                 col = client.get_collection(self.collection_name)
                 total = col.count()
-                if total >= 2017:
+                if total == esperado_mongo:
                     logger.info(
-                        "Coleção '%s' já indexada com %d artigos. Pulando re-indexação.",
+                        "Coleção '%s' já indexada com todos os %d artigos vigentes do MongoDB. Pulando re-indexação.",
                         self.collection_name,
                         total,
                     )
@@ -295,13 +300,10 @@ class BERTSearch:
             except Exception:
                 pass
 
-        if db is None:
-            db = MongoConnection().get_db()
-
         cursor = db["artigos"].find(
-            {"lei_id": "cc2002", "vigente": True},
-            {"_id": 1, "numero": 1, "citacao": 1, "texto": 1, "texto_vigente": 1, "ordem": 1},
-        ).sort("ordem", 1)
+            {"vigente": True},
+            {"_id": 1, "lei_id": 1, "numero": 1, "citacao": 1, "texto": 1, "texto_vigente": 1, "ordem": 1},
+        ).sort([("lei_id", 1), ("ordem", 1)])
 
         passagens: list[dict[str, str]] = []
         for doc in cursor:
@@ -328,38 +330,77 @@ class BERTSearch:
                 "Nenhum artigo vigente do Código Civil encontrado no MongoDB ('rag_juridico.artigos')."
             )
 
-        logger.info(
-            "Iniciando indexação de %d passagens vigentes no ChromaDB ('%s')...",
-            len(passagens),
-            self.collection_name,
-        )
+        if force:
+            try:
+                client.delete_collection(self.collection_name)
+            except Exception:
+                pass
 
-        # Deleta coleção anterior se existir e estiver forçando ou incompleta
-        try:
-            client.delete_collection(self.collection_name)
-        except Exception:
-            pass
-
-        col = client.create_collection(
+        col = client.get_or_create_collection(
             name=self.collection_name, metadata={"hnsw:space": "cosine"}
         )
         self._collection = col
 
-        # Vetorização em lote
-        textos_idx = [p["representation"] for p in passagens]
-        vetores = self.encode(textos_idx, batch_size=batch_size, normalize_embeddings=True)
+        ids_existentes: set[str] = set()
+        if not force:
+            try:
+                ja_salvos = col.get(include=[])
+                ids_existentes = set(ja_salvos.get("ids") or [])
+            except Exception:
+                ids_existentes = set()
 
-        # Inserção no ChromaDB em lotes de 500
+        # Prioriza Códigos, Constituição, Estatutos e Leis Complementares no início da fila
+        codigos_prioritarios = {
+            "cc2002", "cf1988", "l8069", "l10741", "l13146", "l8906", "l10257",
+            "l12288", "l10826", "l4504", "l6001", "l12852", "l6880", "lcp123",
+            "l13709", "l12965", "l14133", "l8078", "del2848", "del3689", "l12651",
+            "l4737", "l5172", "l13105", "l9503", "del5452",
+        }
+        passagens.sort(key=lambda p: (0 if p["id"].split(":")[0] in codigos_prioritarios else 1, p["id"]))
+        pendentes = [p for p in passagens if p["id"] not in ids_existentes]
+
+        if not pendentes:
+            total_final = col.count()
+            logger.info("Todos os %d artigos vigentes já estão indexados no ChromaDB.", total_final)
+            return IndexResult({"status": "skipped", "total_vectors": total_final})
+
+        logger.info(
+            "Indexando %d novos artigos vigentes no ChromaDB (já existentes: %d | total: %d)...",
+            len(pendentes),
+            len(ids_existentes),
+            len(passagens),
+        )
+
+        # Vetorização e inserção incremental no ChromaDB em lotes de 500
+        # (evita acumular centenas de milhares de vetores em RAM antes de persistir)
         chunk_size = 500
-        for ini in range(0, len(passagens), chunk_size):
-            lote = passagens[ini : ini + chunk_size]
-            lote_emb = vetores[ini : ini + chunk_size].tolist()
-            col.add(
+        total_pendentes = len(pendentes)
+        t_ini_idx = time.perf_counter()
+        for ini in range(0, total_pendentes, chunk_size):
+            lote = pendentes[ini : ini + chunk_size]
+            textos_lote = [p["representation"] for p in lote]
+            vetores_lote = self.encode(textos_lote, batch_size=batch_size, normalize_embeddings=True)
+            col. upsert(
                 ids=[p["id"] for p in lote],
-                embeddings=lote_emb,
+                embeddings=vetores_lote.tolist(),
                 documents=[p["texto"] for p in lote],
                 metadatas=[{"citacao": p["citacao"]} for p in lote],
             )
+            fim = min(ini + chunk_size, total_pendentes)
+            if fim % 1000 == 0 or fim == total_pendentes:
+                decorrido = time.perf_counter() - t_ini_idx
+                taxa = fim / max(0.1, decorrido)
+                restante = (total_pendentes - fim) / max(0.1, taxa)
+                logger.info(
+                    "ChromaDB Progresso: +%d/%d novos (total no banco: %d/%d, %.1f%%) | %.1f art/s | ETA: %.0fs",
+                    fim,
+                    total_pendentes,
+                    len(ids_existentes) + fim,
+                    len(passagens),
+                    ((len(ids_existentes) + fim) / len(passagens)) * 100.0,
+                    taxa,
+                    restante,
+                )
 
         total_final = col.count()
         logger.info("Indexação concluída: %d vetores no ChromaDB.", total_final)

@@ -36,14 +36,14 @@ ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-# Otimizações de CPU antes da carga de bibliotecas neurais
-os.environ["OMP_NUM_THREADS"] = "4"
-os.environ["MKL_NUM_THREADS"] = "4"
+# Otimizações de CPU/GPU antes da carga de bibliotecas neurais
+_CPU_THREADS = str(max(4, (os.cpu_count() or 8)))
+os.environ["OMP_NUM_THREADS"] = _CPU_THREADS
+os.environ["MKL_NUM_THREADS"] = _CPU_THREADS
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 import torch
-torch.set_num_threads(4)
-torch.set_num_interop_threads(2)
+torch.set_num_threads(int(_CPU_THREADS))
 
 from src.database.mongo_connection import MongoConnection
 from src.database.chroma_connection import ChromaConnection
@@ -149,18 +149,19 @@ def step_1_verificar_mongodb() -> Any:
     t0 = time.perf_counter()
     db = MongoConnection().get_db()
 
-    filtro = {"lei_id": "cc2002", "vigente": True}
+    filtro = {"vigente": True}
     total_vigentes = db["artigos"].count_documents(filtro)
+    total_leis = db["leis"].count_documents({})
     duracao = (time.perf_counter() - t0) * 1000
 
     if total_vigentes == 0:
-        logger.error("ERRO FATAL: Coleção 'artigos' no MongoDB está vazia ou sem artigos vigentes do CC2002!")
+        logger.error("ERRO FATAL: Coleção 'artigos' no MongoDB está vazia ou sem artigos vigentes!")
         logger.error("Execute primeiro: python -m src.scraper.carregar_mongo")
         raise RuntimeError("MongoDB não contém artigos vigentes para treinamento.")
 
     logger.info(
         f"[Etapa 1/4] Sucesso: MongoDB conectado ({duracao:.1f}ms). "
-        f"Artigos vigentes encontrados no Código Civil (cc2002): {total_vigentes}"
+        f"Base completa: {total_leis} lei(s) | {total_vigentes} artigos vigentes encontrados."
     )
     return db
 

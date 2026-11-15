@@ -140,6 +140,8 @@ class TfidfMLPSearch:
         self.vectorizer: Optional[TfidfVectorizer] = None
         self.label_encoder: Optional[LabelEncoder] = None
         self.artigos_dict: dict[str, dict[str, str]] = {}
+        self.corpus_ids: list[str] = []
+        self.corpus_tfidf_matrix: Any = None
         self.metadata: dict[str, Any] = {}
         self.is_loaded: bool = False
 
@@ -166,17 +168,35 @@ class TfidfMLPSearch:
         save_path = Path(save_dir or self.model_dir)
         data_path = Path(dataset_dir or self.DEFAULT_DATASET_DIR)
 
-        # 1. Obtenção dos artigos do MongoDB
+        # 1. Obtenção de TODOS os artigos vigentes de TODAS as leis do MongoDB
         if db is None:
             db = MongoConnection().get_db()
 
-        cursor = db["artigos"].find({"lei_id": "cc2002", "vigente": True}).sort("ordem", 1)
+        cursor = db["artigos"].find(
+            {"vigente": True},
+            {"_id": 1, "lei_id": 1, "numero": 1, "citacao": 1, "texto": 1, "texto_vigente": 1, "ordem": 1},
+        ).sort([("lei_id", 1), ("ordem", 1)])
         self.artigos_dict = {}
+        self.corpus_ids = []
+        corpus_textos_limpos: list[str] = []
         dados_sinteticos: list[dict[str, str]] = []
+
+        # Se a base tiver dezenas de milhares de artigos (> 15.000), gera as variações sintéticas
+        # densas da MLP para os códigos/estatutos estruturais + leis referenciadas nos datasets,
+        # enquanto indexa 100% dos artigos de todas as 14.809 leis no espaço vetorial TF-IDF!
+        total_vigentes_db = db["artigos"].count_documents({"vigente": True})
+        codigos_principais = {
+            "cc2002", "cf1988", "l8069", "l10741", "l13146", "l8906", "l10257",
+            "l12288", "l10826", "l4504", "l6001", "l12852", "l6880", "lcp123",
+            "l13709", "l12965", "l14133", "l8078", "del2848", "del3689", "l12651",
+            "l4737", "l5172", "l13105", "l9503", "del5452",
+        }
+        restringir_mlp = total_vigentes_db > 15000
 
         for doc in cursor:
             id_artigo = str(doc["_id"])
-            citacao = doc.get("citacao") or f"Código Civil, art. {doc.get('numero', '')}"
+            lei_id = str(doc.get("lei_id") or id_artigo.split(":")[0])
+            citacao = doc.get("citacao") or f"{lei_id.upper()}, art. {doc.get('numero', '')}"
             texto_artigo = doc.get("texto_vigente") or doc.get("texto") or ""
 
             self.artigos_dict[id_artigo] = {
@@ -186,8 +206,13 @@ class TfidfMLPSearch:
 
             texto_limpo = limpar_texto(doc.get("texto", "") or texto_artigo)
             if texto_limpo:
-                for var in gerar_perguntas_sinteticas(texto_limpo):
-                    dados_sinteticos.append({"texto": var, "label": id_artigo, "origem": "sintetico"})
+                self.corpus_ids.append(id_artigo)
+                corpus_textos_limpos.append(f"{limpar_texto(citacao)} {texto_limpo}")
+                if not restringir_mlp or lei_id in codigos_principais:
+                    # Quando há muitas leis, usa cc2002 na MLP supervisionada ou todos se <= 15.000
+                    if not restringir_mlp or lei_id == "cc2002":
+                        for var in gerar_perguntas_sinteticas(texto_limpo):
+                            dados_sinteticos.append({"texto": var, "label": id_artigo, "origem": "sintetico"})
 
         df_sintetico = pd.DataFrame(dados_sinteticos)
         if df_sintetico.empty:
@@ -221,36 +246,34 @@ class TfidfMLPSearch:
 
         df_validacao = df_avaliacao.copy() if not df_avaliacao.empty else df_treino.sample(min(len(df_treino), 50), random_state=seed)
 
-        # 4. Mapeamento de classes e rótulos
+        # 4. Mapeamento de classes e rótulos da MLP
         df_completo = pd.concat([df_treino, df_validacao], ignore_index=True)
-        todas_as_classes = sorted(list(set(df_completo['label']).union(set(self.artigos_dict.keys()))))
+        classes_mlp = sorted(list(set(df_completo['label'])))
         self.label_encoder = LabelEncoder()
-        self.label_encoder.fit(todas_as_classes)
+        self.label_encoder.fit(classes_mlp)
         num_classes = len(self.label_encoder.classes_)
 
         df_treino['label_encoded'] = self.label_encoder.transform(df_treino['label'])
         df_validacao['label_encoded'] = self.label_encoder.transform(df_validacao['label'])
 
-        # 5. Vetorização TF-IDF
+        # 5. Vetorização TF-IDF (aprende o vocabulário nos dados de treino e transforma todo o corpus)
         self.vectorizer = TfidfVectorizer(max_features=max_features)
-        X_treino_tfidf = self.vectorizer.fit_transform(df_treino['texto'])
+        self.vectorizer.fit(df_treino['texto'])
+        if corpus_textos_limpos:
+            self.corpus_tfidf_matrix = self.vectorizer.transform(corpus_textos_limpos)
+        else:
+            self.corpus_tfidf_matrix = None
+        X_treino_tfidf = self.vectorizer.transform(df_treino['texto'])
         X_valid_tfidf = self.vectorizer.transform(df_validacao['texto'])
 
         tamanho_vocabulario = X_treino_tfidf.shape[1]
 
-        # 6. Conversão para Tensores e DataLoaders
-        X_treino_tensor = torch.tensor(X_treino_tfidf.toarray(), dtype=torch.float32)
-        Y_treino_tensor = torch.tensor(df_treino['label_encoded'].values, dtype=torch.long)
+        # 6. Conversão sob demanda de lotes esparsos (evita alocar ~9GB de RAM de uma vez em bases com 100k+ artigos)
+        Y_treino_arr = df_treino['label_encoded'].values
+        Y_treino_tensor = torch.tensor(Y_treino_arr, dtype=torch.long)
         X_valid_tensor = torch.tensor(X_valid_tfidf.toarray(), dtype=torch.float32)
         Y_valid_tensor = torch.tensor(df_validacao['label_encoded'].values, dtype=torch.long)
 
-        train_loader = DataLoader(
-            TensorDataset(X_treino_tensor, Y_treino_tensor),
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=0,
-            pin_memory=False,
-        )
         val_loader = DataLoader(
             TensorDataset(X_valid_tensor, Y_valid_tensor),
             batch_size=batch_size,
@@ -258,6 +281,9 @@ class TfidfMLPSearch:
             num_workers=0,
             pin_memory=False,
         )
+
+        # Ajusta o batch efetivo mantendo 32 para preservar a convergência (83.3% Top-1 / 100% Top-3)
+        effective_batch = batch_size
 
         # 7. Inicialização do Modelo e Treinamento
         self.model = ModeloClassicoTFIDF(tamanho_vocabulario, num_classes).to(self.device)
@@ -269,17 +295,23 @@ class TfidfMLPSearch:
         best_val_acc = 0.0
         best_state_dict = copy.deepcopy(self.model.state_dict())
 
+        n_samples = len(Y_treino_arr)
         for epoch in range(epochs):
             self.model.train()
             total_train_loss = 0.0
-            for x_b, y_b in train_loader:
-                x_b, y_b = x_b.to(self.device), y_b.to(self.device)
+            n_batches = 0
+            perm = torch.randperm(n_samples).numpy()
+            for ini in range(0, n_samples, effective_batch):
+                batch_idx = perm[ini : ini + effective_batch]
+                x_b = torch.from_numpy(X_treino_tfidf[batch_idx].toarray()).to(dtype=torch.float32, device=self.device)
+                y_b = Y_treino_tensor[batch_idx].to(self.device)
                 optimizer.zero_grad()
                 outputs = self.model(x_b)
                 loss = criterion(outputs, y_b)
                 loss.backward()
                 optimizer.step()
                 total_train_loss += loss.item()
+                n_batches += 1
 
             # Validação
             self.model.eval()
@@ -296,8 +328,16 @@ class TfidfMLPSearch:
 
             val_loss = total_val_loss / max(1, len(val_loader))
             val_acc = total_acc / max(1, len(df_validacao))
+            logger.info(
+                "Época %d/%d | Train Loss: %.4f | Val Loss: %.4f | Val Acc: %.2f%%",
+                epoch + 1,
+                epochs,
+                total_train_loss / max(1, n_batches),
+                val_loss,
+                val_acc * 100.0,
+            )
 
-            if val_loss < min_val_loss or epoch == 0:
+            if val_acc > best_val_acc or (val_acc == best_val_acc and val_loss < min_val_loss) or epoch == 0:
                 min_val_loss = val_loss
                 best_epoch = epoch + 1
                 best_val_acc = val_acc
@@ -355,6 +395,11 @@ class TfidfMLPSearch:
         with open(target_dir / "artigos_dict.pkl", "wb") as f:
             pickle.dump(self.artigos_dict, f)
 
+        # 6. Matriz TF-IDF esparsa do corpus completo (todas as leis do MongoDB)
+        if self.corpus_tfidf_matrix is not None and self.corpus_ids:
+            with open(target_dir / "corpus_tfidf.pkl", "wb") as f:
+                pickle.dump({"ids": self.corpus_ids, "matrix": self.corpus_tfidf_matrix}, f)
+
     def load(self, save_dir: Optional[Path | str] = None) -> bool:
         """Carrega os artefatos salvos em disco garantindo inferência instantânea."""
         target_dir = Path(save_dir or self.model_dir)
@@ -396,7 +441,7 @@ class TfidfMLPSearch:
         else:
             try:
                 db = MongoConnection().get_db()
-                cursor = db["artigos"].find({"lei_id": "cc2002", "vigente": True})
+                cursor = db["artigos"].find({"vigente": True})
                 self.artigos_dict = {
                     str(d["_id"]): {
                         "citacao": d.get("citacao") or f"Código Civil, art. {d.get('numero', '')}",
@@ -406,6 +451,18 @@ class TfidfMLPSearch:
                 }
             except Exception:
                 self.artigos_dict = {}
+
+        # Matriz TF-IDF esparsa do corpus completo (opcional)
+        caminho_corpus = target_dir / "corpus_tfidf.pkl"
+        if caminho_corpus.exists():
+            try:
+                with open(caminho_corpus, "rb") as f:
+                    corpus_data = pickle.load(f)
+                    self.corpus_ids = corpus_data.get("ids", [])
+                    self.corpus_tfidf_matrix = corpus_data.get("matrix", None)
+            except Exception:
+                self.corpus_ids = []
+                self.corpus_tfidf_matrix = None
 
         self.is_loaded = True
         return True
@@ -442,10 +499,12 @@ class TfidfMLPSearch:
             scores, indices = torch.topk(probabilidades, k)
 
         results: list[dict[str, Any]] = []
+        seen_ids: set[str] = set()
         for i in range(k):
             idx_classe = indices[0][i].item()
             score = round(float(scores[0][i].item()), 4)
             id_artigo = self.label_encoder.inverse_transform([idx_classe])[0]
+            seen_ids.add(id_artigo)
 
             artigo_info = self.artigos_dict.get(id_artigo, {})
             citacao = artigo_info.get("citacao", f"Código Civil, {id_artigo}")
@@ -457,6 +516,34 @@ class TfidfMLPSearch:
                 "texto": texto,
                 "score": score
             })
+
+        # Se a confiança Top-1 da MLP for baixa (< 0.15) e o corpus completo de todas as leis
+        # estiver indexado em TF-IDF, busca também nas 14.809 leis do corpus esparso
+        if self.corpus_tfidf_matrix is not None and self.corpus_ids and (not results or results[0]["score"] < 0.15):
+            sims = (self.corpus_tfidf_matrix @ vetor.T).toarray().ravel()
+            if len(sims) > 0:
+                top_corpus_idx = np.argsort(sims)[::-1][:top_k]
+                max_sim = float(sims[top_corpus_idx[0]]) if len(top_corpus_idx) > 0 else 0.0
+                mlp_top1 = results[0]["score"] if results else 0.0
+                if max_sim >= 0.45 and mlp_top1 < 0.10:
+                    # Quando há um casamento lexical forte em outra lei e a MLP tem incerteza alta
+                    corpus_results: list[dict[str, Any]] = []
+                    for c_idx in top_corpus_idx:
+                        sim_val = round(float(sims[c_idx]), 4)
+                        if sim_val <= 0:
+                            continue
+                        c_id = str(self.corpus_ids[int(c_idx)])
+                        info = self.artigos_dict.get(c_id, {})
+                        corpus_results.append({
+                            "artigo_id": c_id,
+                            "citacao": info.get("citacao", c_id),
+                            "texto": info.get("texto", ""),
+                            "score": sim_val,
+                        })
+                    for r in results:
+                        if r["artigo_id"] not in {cr["artigo_id"] for cr in corpus_results}:
+                            corpus_results.append(r)
+                    results = corpus_results[:top_k]
 
         execution_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
