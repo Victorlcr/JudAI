@@ -1,0 +1,170 @@
+[
+  {
+    "categoria": "Busca Literal",
+    "query": "A menoridade cessa aos dezoito anos completos, quando a pessoa fica habilitada à prática de todos os atos da vida civil.",
+    "classico": {
+      "top1_artigo_id": "cc2002:art5",
+      "top1_citacao": "Código Civil, art. 5º",
+      "score": 0.9998,
+      "latencia_ms": 337.79,
+      "top3": [
+        "cc2002:art5",
+        "cc2002:art3",
+        "cc2002:art2"
+      ]
+    },
+    "moderno": {
+      "top1_artigo_id": "cc2002:art5",
+      "top1_citacao": "Código Civil, art. 5º",
+      "similarity_score": 0.9015,
+      "abstencao": false,
+      "resposta_gerada": "Sim. A menoridade cessa aos dezoito anos completos quando a pessoa fica habilitada a praticar todos os atos da vida civil. (Código Civil, art. 5o).",
+      "latencia_ms": 15546.32,
+      "top3": [
+        "cc2002:art5",
+        "cc2002:art3",
+        "l8069:art104"
+      ]
+    }
+  },
+  {
+    "categoria": "Sinônimos e Coloquialismo",
+    "query": "O galho da árvore do meu vizinho está caindo no meu quintal e rachando a cerca. Posso cortar por conta própria sem pedir autorização para ele?",
+    "classico": {
+      "top1_artigo_id": "cc2002:art1228",
+      "top1_citacao": "Código Civil, art. 1.228",
+      "score": 0.1737,
+      "latencia_ms": 421.08,
+      "top3": [
+        "cc2002:art1228",
+        "cc2002:art16",
+        "cc2002:art187"
+      ]
+    },
+    "moderno": {
+      "top1_artigo_id": "cc2002:art1283",
+      "top1_citacao": "Código Civil, art. 1.283",
+      "similarity_score": 0.5119,
+      "abstencao": false,
+      "resposta_gerada": "Não. As raízes e ramos de árvore que ultrapassarem a área podem ser cortados até o plano vertical dividido pelo dono do terreno. (Código Civil, art. 1.283).",
+      "latencia_ms": 7314.08,
+      "top3": [
+        "cc2002:art1283",
+        "cflo2012:art23",
+        "cflo2012:art28"
+      ]
+    }
+  },
+  {
+    "categoria": "Polissemia",
+    "query": "Qual o prazo de prescrição para cobrar a prestação de alimentos vencida?",
+    "classico": {
+      "top1_artigo_id": "cc2002:art206-A",
+      "top1_citacao": "Código Civil, art. 206-A",
+      "score": 0.1294,
+      "latencia_ms": 45.85,
+      "top3": [
+        "cc2002:art206-A",
+        "cc2002:art333",
+        "cc2002:art871"
+      ]
+    },
+    "moderno": {
+      "top1_artigo_id": "cpc2015:art1056",
+      "top1_citacao": "Código de Processo Civil, art. 1.056",
+      "similarity_score": 0.5982,
+      "abstencao": false,
+      "resposta_gerada": "A prescrição para cobrança do crédito tributário prescreve em cinco anos, contados da data de vencimento. (Código de Processo Civil, art. 1.057).",
+      "latencia_ms": 4949.61,
+      "top3": [
+        "cpc2015:art1056",
+        "cc2002:art939",
+        "ctn1966:art174"
+      ]
+    }
+  },
+  {
+    "categoria": "Inversão Sintática",
+    "query": "Com dezesseis anos completos, para que se realize validamente o casamento, de ambos os genitores a expressa autorização se faz imperiosa?",
+    "classico": {
+      "top1_artigo_id": "cc2002:art5",
+      "top1_citacao": "Código Civil, art. 5º",
+      "score": 0.3399,
+      "latencia_ms": 50.25,
+      "top3": [
+        "cc2002:art5",
+        "cc2002:art1552",
+        "cc2002:art1517"
+      ]
+    },
+    "moderno": {
+      "top1_artigo_id": "cc2002:art1517",
+      "top1_citacao": "Código Civil, art. 1.517",
+      "similarity_score": 0.8125,
+      "abstencao": false,
+      "resposta_gerada": "Sim. O homem e a mulher com dezesseis anos podem casar, com autorização de ambos os pais ou de seus representantes legales, até não atingir a maioria civil. (Código Civil, art. 1.517).",
+      "latencia_ms": 10065.62,
+      "top3": [
+        "cc2002:art1517",
+        "cc2002:art1654",
+        "l8069:art26"
+      ]
+    }
+  },
+  {
+    "categoria": "Caso Prático",
+    "query": "João ocupa um terreno baldio urbano desde 2008 de forma contínua e sem qualquer oposição do proprietário registrado. Ele construiu ali sua casa e plantou hortaliças sem pagar aluguel. Ele já pode requerer a propriedade definitiva do imóvel?",
+    "classico": {
+      "top1_artigo_id": "cc2002:art1242",
+      "top1_citacao": "Código Civil, art. 1.242",
+      "score": 0.0749,
+      "latencia_ms": 64.12,
+      "top3": [
+        "cc2002:art1242",
+        "cc2002:art1276",
+        "cc2002:art1239"
+      ]
+    },
+    "moderno": {
+      "top1_artigo_id": "cc2002:art1239",
+      "top1_citacao": "Código Civil, art. 1.239",
+      "similarity_score": 0.6898,
+      "abstencao": false,
+      "resposta_gerada": "Sim. Quem não é dono de um imóvel rural ou urbano possui a área de terra por cinco anos seguidos e sem oposição do dono registrado, adquire a propriedade. (Constituição Federal de 1988, art. 191).",
+      "latencia_ms": 10118.77,
+      "top3": [
+        "cc2002:art1239",
+        "cf1988:art191",
+        "cc2002:art1238"
+      ]
+    }
+  },
+  {
+    "categoria": "Caso Prático de Responsabilidade Civil",
+    "query": "Um motorista avançou o sinal vermelho e colidiu com a traseira do veículo de uma entregadora, causando perda total da moto e três meses de incapacidade para o trabalho. Quais as obrigações de reparação cabíveis?",
+    "classico": {
+      "top1_artigo_id": "cc2002:art1228",
+      "top1_citacao": "Código Civil, art. 1.228",
+      "score": 0.0526,
+      "latencia_ms": 69.65,
+      "top3": [
+        "cc2002:art1228",
+        "cc2002:art113",
+        "cc2002:art187"
+      ]
+    },
+    "moderno": {
+      "top1_artigo_id": "ctb1997:art303",
+      "top1_citacao": "Código de Trânsito Brasileiro, art. 303",
+      "similarity_score": 0.5375,
+      "abstencao": false,
+      "resposta_gerada": "Sim. Praticar lesão corporal culposa na direção de um motorista é crime, com pena de detenção de seis meses a dois anos e suspensão da habilitação. (Código de Trânsito Brasileiro, art. 303).",
+      "latencia_ms": 8605.57,
+      "top3": [
+        "ctb1997:art303",
+        "ctb1997:art178",
+        "ctb1997:art175"
+      ]
+    }
+  }
+]

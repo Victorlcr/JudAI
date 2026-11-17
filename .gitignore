@@ -20,6 +20,8 @@ data/**/*
 !data/**/
 !data/**/.gitkeep
 !data/dataset/*.jsonl
+!data/resultados/*
+!data/resultados/**/*
 
 # Logs e arquivos de sistema operacional
 *.log
