@@ -1,0 +1,57 @@
+{
+  "dataset_teste": "avaliacao_inicial.jsonl (12 perguntas reais formuladas por leigos)",
+  "protocolo": "Zero Leakage / Código Civil Brasileiro (2.017 classes vigentes)",
+  "topk_comparativo": {
+    "TF-IDF + MLP": {
+      "top1": 83.33,
+      "top3": 100.0,
+      "top5": 100.0
+    },
+    "BERT-Jurídico (Teste Visto)": {
+      "top1": 54.0,
+      "top3": 75.0,
+      "top5": 81.9
+    },
+    "BERT-Jurídico (Validação Geral)": {
+      "top1": 52.9,
+      "top3": 73.4,
+      "top5": 79.9
+    },
+    "BERT-Jurídico (Generalização Teste Novo)": {
+      "top1": 48.2,
+      "top3": 67.3,
+      "top5": 75.8
+    },
+    "BERTimbau Original (Zero-Shot)": {
+      "top1": 18.8,
+      "top3": 29.4,
+      "top5": 34.8
+    }
+  },
+  "tradeoff_custo_beneficio": [
+    {
+      "modelo": "TF-IDF + MLP",
+      "tempo_treino_min": 4.0,
+      "top3_acc": 100.0,
+      "parametros_milhoes": 3.6,
+      "epocas": 20,
+      "dispositivo": "CPU"
+    },
+    {
+      "modelo": "BERT-Jurídico (Busca)",
+      "tempo_treino_min": 6.0,
+      "top3_acc": 75.0,
+      "parametros_milhoes": 110.0,
+      "epocas": 8,
+      "dispositivo": "GPU (Colab T4)"
+    },
+    {
+      "modelo": "mT0-Jurídico (RAG Completo)",
+      "tempo_treino_min": 21.0,
+      "top3_acc": 76.0,
+      "parametros_milhoes": 580.0,
+      "epocas": 5,
+      "dispositivo": "GPU (Colab T4)"
+    }
+  ]
+}

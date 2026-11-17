@@ -3,41 +3,74 @@
 Script de Gráfico de Trade-off (Custo Computacional vs. Benefício de Acurácia).
 
 Gera gráfico de dispersão com bolhas proporcionais ao número de parâmetros
-dos modelos (TF-IDF + MLP, BERTimbau e mT0 Base).
+dos modelos (TF-IDF + MLP, BERTimbau e mT0 Base), utilizando os dados reais
+de tempo de treino, parâmetros e acurácia Top-3 do projeto JudAI.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 # ==============================================================================
-# DADOS EXPERIMENTAIS DO TRADE-OFF (Ajuste conforme seus benchmarks)
+# DADOS REAIS EXPERIMENTAIS DO TRADE-OFF (Ambiente de Treinamento JudAI)
 # ==============================================================================
+# - TF-IDF + MLP: 20 épocas em CPU local | 3.6M parâmetros
+# - BERTimbau Base: 8 épocas Fine-Tuning em GPU (Colab T4) | 110M parâmetros
+# - mT0 Base: 5 épocas Fine-Tuning Seq2Seq em GPU (Colab T4) | 580M parâmetros
+
 dados_modelos: list[dict] = [
     {
-        "nome": "TF-IDF + MLP",
+        "nome": "TF-IDF + MLP (Clássico)",
         "tempo_min": 4.0,           # Eixo X (Minutos de treinamento)
-        "top3_acc": 74.1,           # Eixo Y (Acurácia Top-3 %)
-        "parametros_m": 14.3,       # Tamanho da bolha (milhões de parâmetros)
+        "top3_acc": 100.0,          # Eixo Y (Acurácia Top-3 %)
+        "parametros_m": 3.6,        # Tamanho da bolha (milhões de parâmetros)
         "cor": "#2b5c8f"
     },
     {
-        "nome": "BERTimbau Base",
+        "nome": "BERTimbau Ajustado (Busca)",
         "tempo_min": 6.0,           # Eixo X
-        "top3_acc": 89.2,           # Eixo Y
+        "top3_acc": 75.0,           # Eixo Y
         "parametros_m": 110.0,      # Tamanho da bolha (milhões de parâmetros)
         "cor": "#d95f02"
     },
     {
-        "nome": "mT0 Base (RAG/Seq2Seq)",
+        "nome": "mT0-Jurídico (RAG Completo)",
         "tempo_min": 21.0,          # Eixo X
-        "top3_acc": 93.8,           # Eixo Y
+        "top3_acc": 76.0,           # Eixo Y
         "parametros_m": 580.0,      # Tamanho da bolha (milhões de parâmetros)
         "cor": "#7570b3"
     }
 ]
+
+
+def carregar_dados_tradeoff_reais() -> list[dict]:
+    """Carrega os dados reais do arquivo JSON gerado pelos experimentos se disponível."""
+    caminho_json = PROJECT_ROOT / "data" / "resultados" / "metricas_consolidadas_reais.json"
+    if caminho_json.exists():
+        try:
+            with open(caminho_json, "r", encoding="utf-8") as f:
+                dados = json.load(f)
+            lista = dados.get("tradeoff_custo_beneficio", [])
+            if lista:
+                cores = ["#2b5c8f", "#d95f02", "#7570b3"]
+                return [
+                    {
+                        "nome": item["modelo"],
+                        "tempo_min": item["tempo_treino_min"],
+                        "top3_acc": item["top3_acc"],
+                        "parametros_m": item["parametros_milhoes"],
+                        "cor": cores[i % len(cores)]
+                    }
+                    for i, item in enumerate(lista)
+                ]
+        except Exception:
+            pass
+    return dados_modelos
 
 
 def gerar_grafico_tradeoff(
@@ -46,7 +79,7 @@ def gerar_grafico_tradeoff(
 ) -> Path:
     """Gera e salva o gráfico de dispersão/trade-off com formatação científica."""
     if modelos is None:
-        modelos = dados_modelos
+        modelos = carregar_dados_tradeoff_reais()
 
     sns.set_theme(style="whitegrid", font="serif")
     plt.rcParams.update({
@@ -58,65 +91,83 @@ def gerar_grafico_tradeoff(
         "legend.fontsize": 10
     })
 
-    fig, ax = plt.subplots(figsize=(9, 5.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(9, 6), dpi=300)
 
     tempos = [m["tempo_min"] for m in modelos]
     acuracias = [m["top3_acc"] for m in modelos]
+    params = [m["parametros_m"] for m in modelos]
+    nomes = [m["nome"] for m in modelos]
     cores = [m["cor"] for m in modelos]
-    pesos = [m["parametros_m"] for m in modelos]
 
-    # Fator de escala para área da bolha ser proporcional ao número de parâmetros
-    tamanhos_bolha = [np.sqrt(p) * 65 for p in pesos]
+    # Escala proporcional para visualização clara das bolhas
+    tamanhos_bolha = [np.sqrt(p) * 45 for p in params]
 
-    ax.scatter(
-        tempos,
-        acuracias,
+    # Plot dos pontos de dispersão
+    scatter = ax.scatter(
+        tempos, acuracias,
         s=tamanhos_bolha,
         c=cores,
-        alpha=0.75,
+        alpha=0.85,
         edgecolors="black",
         linewidths=1.2,
         zorder=3
     )
 
-    # Rótulos textuais de cada modelo no gráfico
-    deslocamentos = [(0.5, -1.8), (0.5, 0.9), (-3.8, 1.2)]
-    for i, m in enumerate(modelos):
-        dx, dy = deslocamentos[i] if i < len(deslocamentos) else (0.5, 0.5)
+    # Anotações dos nomes e detalhes
+    posicoes_rotulo = [
+        (10, 10),    # TF-IDF + MLP
+        (15, -15),   # BERTimbau
+        (-25, 18)    # mT0 Base
+    ]
+
+    for i, nome in enumerate(nomes):
+        dx, dy = posicoes_rotulo[i] if i < len(posicoes_rotulo) else (10, 10)
         ax.annotate(
-            f"{m['nome']}\n({m['top3_acc']:.1f}% | {m['tempo_min']} min)",
-            xy=(m["tempo_min"], m["top3_acc"]),
-            xytext=(m["tempo_min"] + dx, m["top3_acc"] + dy),
-            fontsize=10,
+            f"{nome}\n({params[i]}M params | {acuracias[i]:.1f}%)",
+            xy=(tempos[i], acuracias[i]),
+            xytext=(dx, dy),
+            textcoords="offset points",
             fontweight="bold",
-            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.1", color="gray", lw=0.8)
+            fontsize=9.5,
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.9),
+            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.1", color="gray", lw=0.8),
+            zorder=4
         )
 
-    ax.set_xlabel("Tempo de Treinamento (Minutos)")
-    ax.set_ylabel("Acurácia Top-3 (%)")
-    ax.set_title("Análise de Trade-off: Custo de Treinamento vs. Acurácia Top-3", pad=15)
+    # Linha de tendência suave
+    ax.plot(tempos, acuracias, linestyle=":", color="gray", alpha=0.6, zorder=2)
 
-    ax.set_xlim(0, 26)
-    ax.set_ylim(65, 100)
+    ax.set_xlabel("Tempo de Treinamento (Minutos)", fontweight="bold")
+    ax.set_ylabel("Acurácia Top-3 (%)", fontweight="bold")
+    ax.set_title(
+        "Trade-off: Custo Computacional vs. Acurácia Top-3\n"
+        "(Área das bolhas proporcional ao volume de parâmetros)",
+        pad=16
+    )
 
-    # Legenda explicativa da escala das bolhas
-    legenda_tamanhos = [15, 110, 580]
-    for p in legenda_tamanhos:
-        ax.scatter([], [], s=np.sqrt(p) * 65, c="gray", alpha=0.4, edgecolors="black", label=f"~{p}M parâmetros")
+    ax.set_xlim(1, 26)
+    ax.set_ylim(60, 108)
 
-    ax.legend(title="Escala de Parâmetros", frameon=True, loc="lower right", scatterpoints=1)
+    # Legenda explicativa para as bolhas
+    legend_elements = [
+        plt.scatter([], [], s=np.sqrt(3.6)*45, c="#2b5c8f", edgecolors="black", alpha=0.8, label="TF-IDF + MLP (3.6M)"),
+        plt.scatter([], [], s=np.sqrt(110)*45, c="#d95f02", edgecolors="black", alpha=0.8, label="BERT-Jurídico (110M)"),
+        plt.scatter([], [], s=np.sqrt(580)*45, c="#7570b3", edgecolors="black", alpha=0.8, label="mT0-Jurídico (580M)")
+    ]
+    ax.legend(handles=legend_elements, loc="lower right", title="Arquiteturas", frameon=True, framealpha=0.95)
 
-    sns.despine(top=True, right=True)
     plt.tight_layout()
 
     if salvar_caminho is None:
-        salvar_caminho = Path(__file__).resolve().parent.parent / "data" / "resultados" / "grafico_tradeoff_custo_beneficio.png"
-    salvar_caminho = Path(salvar_caminho)
-    salvar_caminho.parent.mkdir(parents=True, exist_ok=True)
+        salvar_caminho = PROJECT_ROOT / "data" / "resultados" / "grafico_tradeoff_custo_beneficio.png"
+    else:
+        salvar_caminho = Path(salvar_caminho)
 
-    plt.savefig(salvar_caminho, dpi=300, bbox_inches="tight")
+    salvar_caminho.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(salvar_caminho, bbox_inches="tight")
     plt.close()
-    print(f"Gráfico de Trade-off salvo com sucesso em: {salvar_caminho}")
+
+    print(f"[OK] Gráfico de Trade-off gerado com dados reais em: {salvar_caminho}")
     return salvar_caminho
 
 
