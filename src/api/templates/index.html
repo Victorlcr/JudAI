@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="JudAI - Plataforma de RAG Jurídico Inteligente para o Código Civil Brasileiro">
+  <meta name="description" content="aJudAI - Plataforma de RAG Jurídico Inteligente para o Código Civil Brasileiro">
   <meta name="theme-color" content="#0f172a">
-  <title>JudAI — Plataforma de RAG Jurídico Inteligente</title>
+  <title>aJudAI — Plataforma de RAG Jurídico Inteligente</title>
   <style>
     /* ==========================================================================
-       JudAI Legal Tech Design System - Modern, Crisp, High-Contrast Palette
+       aJudAI Legal Tech Design System - Modern, Crisp, High-Contrast Palette
        ========================================================================== */
     :root {
       --navy-950: #0a0f1d;
@@ -75,7 +75,7 @@
     }
 
     /* Top Brand Header */
-    header.judai-header {
+    header.ajudai-header {
       background: linear-gradient(135deg, var(--navy-950) 0%, var(--navy-900) 100%);
       color: var(--white);
       padding: 1.25rem 2rem;
@@ -875,7 +875,7 @@
     }
 
     /* Footer */
-    footer.judai-footer {
+    footer.ajudai-footer {
       background: var(--white);
       border-top: 1px solid var(--slate-200);
       padding: 1.5rem 2rem;
@@ -885,7 +885,7 @@
       margin-top: auto;
     }
 
-    footer.judai-footer strong {
+    footer.ajudai-footer strong {
       color: var(--navy-900);
     }
   </style>
@@ -893,9 +893,9 @@
 <body>
 
   <!-- ========================================================================
-       JudAI Header Bar
+       aJudAI Header Bar
        ======================================================================== -->
-  <header class="judai-header">
+  <header class="ajudai-header">
     <div class="header-content">
       <div class="brand-group">
         <div class="brand-logo-icon">
@@ -905,7 +905,7 @@
           </svg>
         </div>
         <div class="brand-title-wrap">
-          <h1>JudAI <span class="version-badge">RAG Jurídico</span></h1>
+          <h1>aJudAI <span class="version-badge">RAG Jurídico</span></h1>
           <p>Inteligência Artificial aplicada à Legislação Federal Brasileira (14.809 Leis • 113.710 Artigos Vigentes)</p>
         </div>
       </div>
@@ -1134,18 +1134,18 @@
   </main>
 
   <!-- ========================================================================
-       JudAI Footer
+       aJudAI Footer
        ======================================================================== -->
-  <footer class="judai-footer">
+  <footer class="ajudai-footer">
     <p>
-      <strong>JudAI — RAG Jurídico Híbrido</strong> • Legislação Federal Brasileira (14.809 Leis) • 113.710 Artigos Vigentes Indexados.<br>
+      <strong>aJudAI — RAG Jurídico Híbrido</strong> • Legislação Federal Brasileira (14.809 Leis) • 113.710 Artigos Vigentes Indexados.<br>
       Pipeline Moderno: <code>neuralmind/bert-base-portuguese-cased</code> + <code>ChromaDB</code> + <code>bigscience/mt0-base</code>.<br>
       Pipeline Clássico: <code>TF-IDF Vectorizer</code> + <code>PyTorch MLP (512d)</code> + Índice TF-IDF do Corpus Completo.
     </p>
   </footer>
 
   <!-- ========================================================================
-       JudAI Vanilla ES6+ Application Logic
+       aJudAI Vanilla ES6+ Application Logic
        ======================================================================== -->
   <script>
     // Global Application State
@@ -1263,14 +1263,14 @@
           // Fallback to /health
           const healthRes = await fetch('/health');
           if (healthRes.ok) {
-            elements.systemStatusText.textContent = 'Online • API JudAI Ativa';
+            elements.systemStatusText.textContent = 'Online • API aJudAI Ativa';
           } else {
             elements.systemStatusText.textContent = 'API Offline';
             elements.systemStatusPill.querySelector('.status-dot').style.backgroundColor = '#ef4444';
           }
         }
       } catch (err) {
-        elements.systemStatusText.textContent = 'Conectando ao JudAI...';
+        elements.systemStatusText.textContent = 'Conectando ao aJudAI...';
       }
     }
 

@@ -64,7 +64,7 @@ consultas_qualitativas: dict[str, str] = {
 def executar_bateria() -> list[dict]:
     """Executa a bateria de testes em ambos os modelos locais e retorna os resultados estruturados."""
     print("=" * 80)
-    print("INICIANDO EXECUÇÃO DA BATERIA DE TESTES QUALITATIVOS (JUDAI)")
+    print("INICIANDO EXECUÇÃO DA BATERIA DE TESTES QUALITATIVOS (AJUDAI)")
     print("=" * 80)
 
     # Inicialização dos modelos locais

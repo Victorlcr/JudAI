@@ -1,4 +1,4 @@
-"""JudAI - Plataforma de RAG Híbrido Jurídico.
+"""aJudAI - Plataforma de RAG Híbrido Jurídico.
 
 Infraestrutura base para recuperação e processamento de dispositivos legais.
 """

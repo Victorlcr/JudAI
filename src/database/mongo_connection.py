@@ -1,5 +1,5 @@
 """
-Módulo de Gerenciamento da Conexão com MongoDB (JudAI)
+Módulo de Gerenciamento da Conexão com MongoDB (aJudAI)
 ======================================================
 Fornece a classe Singleton thread-safe `MongoConnection` para acesso
 centralizado ao cliente PyMongo e ao banco de dados padrão.

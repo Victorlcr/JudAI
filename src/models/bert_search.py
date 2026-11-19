@@ -1,5 +1,5 @@
 """
-Módulo de Busca Semântica Densa e Geração (BERTimbau + ChromaDB + mT0) - JudAI
+Módulo de Busca Semântica Densa e Geração (BERTimbau + ChromaDB + mT0) - aJudAI
 =============================================================================
 Implementa a classe BERTSearch para o pipeline moderno RAG jurídico:
 1. Geração de embeddings semânticos densos com SentenceTransformer
@@ -41,7 +41,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.database.chroma_connection import ChromaConnection
 from src.database.mongo_connection import MongoConnection
 
-logger = logging.getLogger("judai.models.bert_search")
+logger = logging.getLogger("ajudai.models.bert_search")
 
 
 class IndexResult(dict):

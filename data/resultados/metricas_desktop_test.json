@@ -1,0 +1,136 @@
+{
+  "por_arquivo": {
+    "test_formal.jsonl": {
+      "tfidf_mlp": {
+        "total": 296,
+        "top1": 9.46,
+        "top3": 13.18,
+        "top5": 13.85,
+        "acertos_top1": 28,
+        "acertos_top3": 39,
+        "acertos_top5": 41,
+        "tempo_s": 31.38
+      },
+      "bert_juridico": {
+        "total": 296,
+        "top1": 67.23,
+        "top3": 82.77,
+        "top5": 88.18,
+        "acertos_top1": 199,
+        "acertos_top3": 245,
+        "acertos_top5": 261,
+        "tempo_s": 23.2
+      }
+    },
+    "test_informal.jsonl": {
+      "tfidf_mlp": {
+        "total": 296,
+        "top1": 1.69,
+        "top3": 3.72,
+        "top5": 3.72,
+        "acertos_top1": 5,
+        "acertos_top3": 11,
+        "acertos_top5": 11,
+        "tempo_s": 16.95
+      },
+      "bert_juridico": {
+        "total": 296,
+        "top1": 40.54,
+        "top3": 64.86,
+        "top5": 70.95,
+        "acertos_top1": 120,
+        "acertos_top3": 192,
+        "acertos_top5": 210,
+        "tempo_s": 17.01
+      }
+    },
+    "val_formal.jsonl": {
+      "tfidf_mlp": {
+        "total": 303,
+        "top1": 10.23,
+        "top3": 11.55,
+        "top5": 13.2,
+        "acertos_top1": 31,
+        "acertos_top3": 35,
+        "acertos_top5": 40,
+        "tempo_s": 13.99
+      },
+      "bert_juridico": {
+        "total": 303,
+        "top1": 68.98,
+        "top3": 85.15,
+        "top5": 90.43,
+        "acertos_top1": 209,
+        "acertos_top3": 258,
+        "acertos_top5": 274,
+        "tempo_s": 24.87
+      }
+    },
+    "val_informal.jsonl": {
+      "tfidf_mlp": {
+        "total": 303,
+        "top1": 0.66,
+        "top3": 0.66,
+        "top5": 1.32,
+        "acertos_top1": 2,
+        "acertos_top3": 2,
+        "acertos_top5": 4,
+        "tempo_s": 19.7
+      },
+      "bert_juridico": {
+        "total": 303,
+        "top1": 43.56,
+        "top3": 63.7,
+        "top5": 73.27,
+        "acertos_top1": 132,
+        "acertos_top3": 193,
+        "acertos_top5": 222,
+        "tempo_s": 20.31
+      }
+    }
+  },
+  "consolidado": {
+    "test (formal + informal)": {
+      "tfidf_mlp": {
+        "total": 592,
+        "top1": 5.57,
+        "top3": 8.45,
+        "top5": 8.78
+      },
+      "bert_juridico": {
+        "total": 592,
+        "top1": 53.89,
+        "top3": 73.82,
+        "top5": 79.56
+      }
+    },
+    "val (formal + informal)": {
+      "tfidf_mlp": {
+        "total": 606,
+        "top1": 5.45,
+        "top3": 6.11,
+        "top5": 7.26
+      },
+      "bert_juridico": {
+        "total": 606,
+        "top1": 56.27,
+        "top3": 74.42,
+        "top5": 81.85
+      }
+    },
+    "todos (1198 perguntas)": {
+      "tfidf_mlp": {
+        "total": 1198,
+        "top1": 5.51,
+        "top3": 7.26,
+        "top5": 8.01
+      },
+      "bert_juridico": {
+        "total": 1198,
+        "top1": 55.09,
+        "top3": 74.12,
+        "top5": 80.72
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-# JudAI — Plataforma de RAG Jurídico Híbrido
+# aJudAI — Plataforma de RAG Jurídico Híbrido
 
 Plataforma inteligente de **Retrieval-Augmented Generation (RAG) Híbrido** especializada na legislação brasileira, com foco no **Código Civil (Lei nº 10.406/2002)**. 
 
@@ -11,7 +11,7 @@ O projeto compara e integra duas abordagens fundamentais de inteligência artifi
 ## 🏛️ Arquitetura do Sistema
 
 ```text
-JudAI/
+aJudAI/
 ├── data/
 │   ├── dataset/                  # Datasets versionados (pares_bert_inicial.jsonl, avaliacao_inicial.jsonl)
 │   ├── chromadb_local/           # Banco vetorial persistente do ChromaDB (2.017 vetores 768d)

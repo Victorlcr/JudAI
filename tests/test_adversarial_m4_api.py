@@ -1,5 +1,5 @@
 """
-Suíte de Testes Adversariais e de Estresse da API FastAPI (JudAI - Milestone 4)
+Suíte de Testes Adversariais e de Estresse da API FastAPI (aJudAI - Milestone 4)
 ==============================================================================
 Módulo: `tests/test_adversarial_m4_api.py`
 Alvo: `src.api.main:app`
@@ -47,7 +47,7 @@ from src.api.main import app
 
 
 class TestAdversarialAPI(unittest.TestCase):
-    """Bateria de testes adversariais para a API FastAPI do JudAI."""
+    """Bateria de testes adversariais para a API FastAPI do aJudAI."""
 
     CANONICAL_QUERY = "Com quantos anos a pessoa passa a ser plenamente capaz na vida civil?"
     CANONICAL_REFUSAL = "Não encontrei informação suficiente no Código Civil para responder a essa pergunta."
@@ -66,7 +66,7 @@ class TestAdversarialAPI(unittest.TestCase):
 
     # Injeções SQL / XSS / Comandos
     INJECTION_PAYLOADS = [
-        "<script>alert('XSS_ATTACK_JUDAI')</script>",
+        "<script>alert('XSS_ATTACK_AJUDAI')</script>",
         "'; DROP TABLE artigos; --",
         "1' OR '1'='1",
         "\"><svg/onload=alert(document.domain)>",

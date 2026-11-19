@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script de Comparação Quantitativa (Top-K) para Artigo Científico - JudAI.
+Script de Comparação Quantitativa (Top-K) para Artigo Científico - aJudAI.
 
 Gera gráfico de barras agrupadas comparando a recuperação Top-1, Top-3 e Top-5
 entre o Modelo Clássico (TF-IDF + MLP) e o Modelo Moderno SOTA (BERTimbau Ajustado),
@@ -17,7 +17,7 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # ==============================================================================
-# DADOS REAIS EXTRAÍDOS DOS EXPERIMENTOS E AVALIAÇÕES DO JUDAI
+# DADOS REAIS EXTRAÍDOS DOS EXPERIMENTOS E AVALIAÇÕES DO AJUDAI
 # ==============================================================================
 # Conjunto de Teste Visto / Avaliação Humana Inicial (avaliacao_inicial.jsonl)
 # 12 perguntas reais desafiadoras formuladas em linguagem natural de leigos.

@@ -1,5 +1,5 @@
 """
-Módulo CLI de Treinamento, Indexação e Verificação Unificada - JudAI
+Módulo CLI de Treinamento, Indexação e Verificação Unificada - aJudAI
 ===================================================================
 Executável via:
     python -m src.models.train_all [opções]
@@ -60,7 +60,7 @@ logger = logging.getLogger("train_all")
 def parse_args() -> argparse.Namespace:
     """Configura e processa argumentos de linha de comando."""
     parser = argparse.ArgumentParser(
-        description="JudAI - Pipeline Unificado de Treinamento e Indexação de Modelos Jurídicos",
+        description="aJudAI - Pipeline Unificado de Treinamento e Indexação de Modelos Jurídicos",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -129,7 +129,7 @@ def parse_args() -> argparse.Namespace:
 def imprimir_cabecalho(args: argparse.Namespace) -> None:
     """Exibe banner informativo com a configuração de execução."""
     print("=" * 80)
-    print("      JUDAI - PIPELINE UNIFICADO DE TREINAMENTO E INDEXAÇÃO DE MODELOS")
+    print("      AJUDAI - PIPELINE UNIFICADO DE TREINAMENTO E INDEXAÇÃO DE MODELOS")
     print("=" * 80)
     print(f"  Diretório Raiz:       {ROOT_DIR}")
     print(f"  Dispositivo Torch:    CPU ({torch.get_num_threads()} threads ativas)")

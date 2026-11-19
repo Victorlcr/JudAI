@@ -1,5 +1,5 @@
 """
-Suíte Completa de Testes Automatizados para a API FastAPI do JudAI (Milestone 4)
+Suíte Completa de Testes Automatizados para a API FastAPI do aJudAI (Milestone 4)
 ================================================================================
 Alvo de Verificação: `src.api.main:app`
 Compatibilidade: Executável nativamente via `pytest tests/test_api.py -v`
@@ -34,8 +34,8 @@ from fastapi.testclient import TestClient
 from src.api.main import app
 
 
-class TestJudAIAPI(unittest.TestCase):
-    """Suíte unificada de testes de integração da API FastAPI do JudAI."""
+class TestaJudAIAPI(unittest.TestCase):
+    """Suíte unificada de testes de integração da API FastAPI do aJudAI."""
 
     CANONICAL_QUERY = "Com quantos anos a pessoa passa a ser plenamente capaz na vida civil?"
     OUT_OF_SCOPE_QUERY = "Receita de bolo de fubá com goiabada"
@@ -105,7 +105,7 @@ class TestJudAIAPI(unittest.TestCase):
 
         html = response.text
         self.assertTrue(len(html) > 500, "O HTML retornado é muito curto ou está vazio.")
-        self.assertIn("JudAI", html)
+        self.assertIn("aJudAI", html)
 
         # Verificação da presença dos títulos das 3 visões navegáveis
         self.assertTrue(

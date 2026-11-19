@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Extração e Consolidação das Métricas Reais do JudAI.
+Extração e Consolidação das Métricas Reais do aJudAI.
 Lê os artefatos reais do projeto (metadata.json, histórico dos notebooks e datasets de avaliação)
 e extrai os números quantitativos exatos para alimentar os gráficos do artigo.
 """

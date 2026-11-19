@@ -1,7 +1,7 @@
 """
-Módulo Principal da API REST (FastAPI) - JudAI
+Módulo Principal da API REST (FastAPI) - aJudAI
 ==============================================
-Fornece os endpoints HTTP da plataforma JudAI para verificação de integridade
+Fornece os endpoints HTTP da plataforma aJudAI para verificação de integridade
 e disponibilidade operacional (/health), status detalhado dos modelos (/models/status),
 serviços de busca jurídica clássica (/search/tfidf e /search/bm25), busca semântica
 moderna BERTimbau + mT0 (/search/bert), comparação simultânea (/search/compare) e
@@ -40,7 +40,7 @@ from src.models.bert_search import BERTSearch
 from src.models.bm25_search import BM25Search
 from src.models.tfidf_mlp_search import TfidfMLPSearch
 
-logger = logging.getLogger("judai.api")
+logger = logging.getLogger("ajudai.api")
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -71,7 +71,7 @@ class QueryRequest(BaseModel):
 class HealthResponse(BaseModel):
     """Schema de resposta para o endpoint de verificação de integridade."""
 
-    status: str = Field(default="ok", description="Status operacional da API JudAI.")
+    status: str = Field(default="ok", description="Status operacional da API aJudAI.")
     version: str = Field(default="0.1.0", description="Versão da API.")
     models_loaded: bool = Field(default=True, description="Indica se os modelos de IA estão carregados.")
 
@@ -186,7 +186,7 @@ async def lifespan(app: FastAPI):
     Carrega as instâncias de modelo no app.state durante a inicialização,
     assegurando aquecimento da RAM e inferências de baixa latência.
     """
-    logger.info("Inicializando modelos de Inteligência Artificial JudAI...")
+    logger.info("Inicializando modelos de Inteligência Artificial aJudAI...")
 
     # 1. Carregamento do Modelo Clássico (TF-IDF + MLP e Wrapper BM25)
     try:
@@ -212,7 +212,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    logger.info("Encerrando ciclo de vida da API JudAI e liberando recursos.")
+    logger.info("Encerrando ciclo de vida da API aJudAI e liberando recursos.")
 
 
 # ---------------------------------------------------------------------------
@@ -220,8 +220,8 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title="JudAI API",
-    description="API REST do JudAI - Plataforma de RAG Híbrido Jurídico para busca e recuperação de legislação brasileira.",
+    title="aJudAI API",
+    description="API REST do aJudAI - Plataforma de RAG Híbrido Jurídico para busca e recuperação de legislação brasileira.",
     version="0.1.0",
     docs_url="/docs",
     openapi_url="/openapi.json",
@@ -484,7 +484,7 @@ def search_compare(
 @app.get(
     "/",
     response_class=HTMLResponse,
-    summary="Interface Web Integrada do JudAI (3 Visões)",
+    summary="Interface Web Integrada do aJudAI (3 Visões)",
     tags=["Interface Web"],
 )
 def get_web_interface() -> HTMLResponse:
@@ -503,10 +503,10 @@ def get_web_interface() -> HTMLResponse:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JudAI — RAG Jurídico Inteligente</title>
+    <title>aJudAI — RAG Jurídico Inteligente</title>
 </head>
 <body>
-    <h1>JudAI — Plataforma de RAG Jurídico</h1>
+    <h1>aJudAI — Plataforma de RAG Jurídico</h1>
     <p>Template principal não encontrado em templates/index.html.</p>
 </body>
 </html>"""

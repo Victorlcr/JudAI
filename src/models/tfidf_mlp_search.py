@@ -1,5 +1,5 @@
 """
-Módulo de Busca Clássica com TF-IDF e Rede Neural MLP - JudAI
+Módulo de Busca Clássica com TF-IDF e Rede Neural MLP - aJudAI
 ============================================================
 Implementa o classificador neural clássico (TF-IDF + PyTorch MLP) para recuperação
 e ranqueamento de artigos da legislação civil brasileira (Código Civil / cc2002).
@@ -41,7 +41,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.database.mongo_connection import MongoConnection
 
-logger = logging.getLogger("judai.models.tfidf_mlp")
+logger = logging.getLogger("ajudai.models.tfidf_mlp")
 
 
 # ---------------------------------------------------------------------------

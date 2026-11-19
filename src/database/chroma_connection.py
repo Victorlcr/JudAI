@@ -1,5 +1,5 @@
 """
-Módulo de Conexão Singleton com ChromaDB - JudAI
+Módulo de Conexão Singleton com ChromaDB - aJudAI
 =================================================
 Fornece acesso thread-safe centralizado ao cliente persistente do ChromaDB
 (chromadb.PersistentClient), garantindo a criação de diretórios de forma

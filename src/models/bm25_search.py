@@ -1,5 +1,5 @@
 """
-Módulo de Busca Léxica / Clássica (BM25 / TFIDF-MLP Wrapper) - JudAI
+Módulo de Busca Léxica / Clássica (BM25 / TFIDF-MLP Wrapper) - aJudAI
 ====================================================================
 Atua como DELEGADOR e WRAPPER retrocompatível para o motor de busca clássica.
 Conforme arquitetura estabelecida em ORIGINAL_REQUEST e PROJECT.md, redireciona
